@@ -1,4 +1,4 @@
-const mongoose = require('mongoose')
+const mongoose = require('../services/mongo')
 
 const usersSchema = mongoose.Schema({
   email: {type: String, required: true, unique: true},
@@ -10,7 +10,7 @@ const usersSchema = mongoose.Schema({
   },
   hashpass: {type: String, required: true},
   phone: {type: String},
-  name: {type: String}
+  name: {type: String, required: true}
 })
 
 const User = mongoose.model('User', usersSchema)
