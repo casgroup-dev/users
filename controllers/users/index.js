@@ -66,7 +66,7 @@ const result = {
       err.message = null
       return next(err)
     }
-    res.send(req.body)
+    res.json(req.body)
   }
 }
 

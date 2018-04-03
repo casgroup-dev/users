@@ -1,9 +1,13 @@
 const express = require('express')
+const router = require('./routes')
 
 const app = express()
 
 app.use(express.json())
 app.use(express.urlencoded({extended: false}))
+
+/* Routes */
+app.use('/', router)
 
 /* Catch 404 and forward to error handler */
 app.use(function (req, res, next) {
