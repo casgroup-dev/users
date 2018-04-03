@@ -6,8 +6,10 @@
     "start": "node ./bin/www"
   },
   "dependencies": {
+    "bcrypt": "^1.0.3",
     "express": "~4.16.0",
     "jsonwebtoken": "^8.2.0",
+    "mongoose": "^5.0.12",
     "winston-namespace": "^1.0.0"
   },
   "devDependencies": {

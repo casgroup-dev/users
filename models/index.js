@@ -1,0 +1,17 @@
+const mongoose = require('mongoose')
+
+const usersSchema = mongoose.Schema({
+  email: {type: String, required: true, unique: true},
+  company: {type: String, required: true},
+  role: {
+    type: String,
+    required: true,
+    enum: ['administrador', 'consultor1', 'consultor2', 'proveedor', 'gestor', 'cliente']
+  },
+  hashpass: {type: String, required: true},
+  phone: {type: String},
+  name: {type: String}
+})
+
+const User = mongoose.model('User', usersSchema)
+module.exports = User
