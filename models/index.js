@@ -1,7 +1,8 @@
 const mongoose = require('../services/mongo')
+require('mongoose-type-email')
 
 const usersSchema = mongoose.Schema({
-  email: {type: String, required: true, unique: true},
+  email: {type: mongoose.SchemaTypes.Email, required: true, unique: true},
   company: {type: String, required: true},
   role: {
     type: String,
