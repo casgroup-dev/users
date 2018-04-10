@@ -1,6 +1,8 @@
 const logger = require('winston-namespace')('auth')
+const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const {result} = require('../users')
+const {User} = require('../../models')
 
 const input = {
   validate: {
@@ -11,7 +13,15 @@ const input = {
      * @param {Function} next - Next function, useful to call the next middleware.
      */
     login: (req, res, next) => {
-      // TODO
+      let err
+      if (!req.body.email) err = new Error('There is no \'email\' to login.')
+      else if (!req.body.password) err = new Error('There is no \'password\' to login.')
+      if (err) {
+        err.status = 400
+        logger.error(err)
+        return next(err)
+      }
+      next()
     }
   }
 }
@@ -24,7 +34,24 @@ const users = {
    * @param {Function} next - Next function, useful to call the next middleware.
    */
   login: (req, res, next) => {
-    // TODO
+    User.findOne({email: req.body.email})
+      .then(user => {
+        if (!user) {
+          const err = new Error(`There is no user with email '${req.body.email}'.`)
+          err.status = 404
+          return next(err)
+        }
+        req.body.user = user
+        return bcrypt.compare(req.body.password, user.password)
+      })
+      .then(result => {
+        if (!result) {
+          const err = new Error('Incorrect password.')
+          err.status = 403
+          return next(err)
+        }
+        return next()
+      })
   },
   token: {
     /**
@@ -36,7 +63,13 @@ const users = {
      * @param {Function} next - Next function, useful to call the next middleware.
      */
     create: (req, res, next) => {
-      // TODO
+      const token = jwt.sign({
+        email: req.body.user.email,
+        role: req.body.user.role,
+        company: req.body.user.company
+      }, process.env.JWT_SECRET)
+      req.body = {token}
+      return next()
     },
     /**
      * Validates the json and set the data in the body of the request.
