@@ -2,7 +2,7 @@ const logger = require('winston-namespace')('auth')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const {result} = require('../users')
-const {User} = require('../../models')
+const {User, Token} = require('../../models')
 
 const input = {
   validate: {
@@ -68,17 +68,43 @@ const users = {
         role: req.body.user.role,
         company: req.body.user.company
       }, process.env.JWT_SECRET)
-      req.body = {token}
-      return next()
+      new Token({token}).save()
+        .then(() => {
+          req.body = {token}
+          return next()
+        })
+        .catch(err => {
+          logger.error(err)
+          err = new Error('Internal error while storing token.')
+          err.status = 500
+          return next(err)
+        })
     },
     /**
-     * Validates the json and set the data in the body of the request.
+     * Validates the token and return 200 or 403 status code. To validate it, it must be in DB and be a valid
+     * token for the current secret.
      * @param {Object} req - Request object.
      * @param {Object} res - Response object.
      * @param {Function} next - Next function, useful to call the next middleware.
      */
     validate: (req, res, next) => {
-      // TODO
+      const catchError = err => {
+        logger.error(err)
+        err = new Error('Not a valid token.')
+        err.status = 403
+        res.status(403)
+        return next(err)
+      }
+      const token = req.params.token
+      jwt.verify(token, process.env.JWT_SECRET, err => {
+        if (err) return catchError(err)
+        Token.findOne({token})
+          .then(() => {
+            req.body = {message: 'Valid token.'}
+            return next()
+          })
+          .catch(err => catchError(err))
+      })
     }
   }
 }
