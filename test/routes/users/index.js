@@ -46,6 +46,19 @@ describe('USERS', () => {
       })
       .catch(err => console.log(err))
   })
+  it('Should create and remove a user', done => {
+    createUser()
+      .then(res => {
+        return chai.request(app)
+          .delete(`/users/${res.body.email}`)
+      })
+      .then(res => {
+        res.body.should.have.property('message')
+        res.status.should.be.equal(200)
+        console.log(res.body)
+        done()
+      })
+  })
 })
 
 /**

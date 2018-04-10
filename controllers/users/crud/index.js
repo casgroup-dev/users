@@ -37,8 +37,24 @@ function get (req, res, next) {
     })
 }
 
+/**
+ * Remove an user by its email.
+ * @param {Object} req
+ * @param {Object} res
+ * @param {Function} next
+ */
 function remove (req, res, next) {
-  // TODO
+  User.remove({email: req.params.email})
+    .then(() => {
+      req.body = {message: 'Success.'}
+      return next()
+    })
+    .catch(err => {
+      logger.error(err)
+      err = new Error('Error while removing the company instance.')
+      err.status = 500
+      return next(err)
+    })
 }
 
 /**
