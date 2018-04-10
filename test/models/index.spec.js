@@ -23,7 +23,7 @@ afterEach(() => databaseCleaner.clean(mongoose.connections[0].db, function () {
 }))
 
 describe('User model', () => {
-  const company = new Company({name: 'Microsfot', industry: 'TI'})
+  const company = new Company({name: 'Microsoft', industry: 'TI'})
   it('Should create a Company', done => {
     company.save()
       .then(() => Company.findOne({name: company.name}))
@@ -35,7 +35,7 @@ describe('User model', () => {
         console.log(err)
         chai.expect(err).to.not.exist
       })
-  }).timeout(5000)
+  })
   it('Should create a user and add it its company', done => {
     const email = 'email@email.com'
     company.save()
@@ -44,7 +44,7 @@ describe('User model', () => {
           email: email,
           company: company._id,
           role: 'consultor1',
-          hashpass: 'gfbfgbgsbd',
+          password: 'gfbfgbgsbd',
           name: 'Tomás Perry'
         })
         return user.save()
@@ -60,5 +60,13 @@ describe('User model', () => {
         console.log(err)
         chai.expect(err).to.not.exist
       })
-  }).timeout(5000)
+  })
+  it('Should return an error when the input is not valid', done => {
+    const company = new Company({name: 'name'})
+    company.validate()
+      .catch(err => {
+        console.log(err.message)
+        done()
+      })
+  })
 })

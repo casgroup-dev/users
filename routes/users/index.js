@@ -9,7 +9,7 @@ router.post('/',
 )
 
 /* Get information of the user using GET method */
-router.get('/:id',
+router.get('/:email',
   users.get,
   result.send
 )
@@ -17,7 +17,7 @@ router.get('/:id',
 /* Edit user using PUT method */
 router.put('/:id',
   input.validate.edition,
-  users.edit,
+  users.update,
   result.send
 )
 
