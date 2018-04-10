@@ -10,7 +10,6 @@ router.post('/',
 
 /* Get all the companies or those that match the given query */
 router.get('/',
-  input.format.options,
   companies.get.query,
   result.send
 )
