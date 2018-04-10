@@ -15,8 +15,9 @@ afterEach(() => databaseCleaner.clean(mongoose.connections[0].db, function () {
   console.log('DB cleaned successfully.')
 }))
 
+const validCompany = {name: 'Microsoft', industry: 'TI'}
+
 describe('COMPANIES', () => {
-  const validCompany = {name: 'Microsoft', industry: 'TI'}
   it('Should get an error if the input for creation is bad', done => {
     chai.request(app)
       .post('/companies')
@@ -36,9 +37,7 @@ describe('COMPANIES', () => {
       body.name.should.be.equal(validCompany.name)
       body.industry.should.be.equal(validCompany.industry)
     }
-    chai.request(app)
-      .post('/companies')
-      .send(validCompany)
+    createCompany()
       .then(res => {
         validateCompany(res.body)
         chai.request(app)
@@ -50,4 +49,21 @@ describe('COMPANIES', () => {
       })
       .catch(err => console.log(err))
   })
+  it('Should create and remove a company', done => {
+    createCompany()
+      .then(() => {
+        chai.request(app)
+          .delete(`/companies/${validCompany.name}`)
+          .then(res => {
+            res.status.should.be.equal(200)
+            console.log(res.body)
+            done()
+          })
+          .catch(err => console.log(err))
+      })
+  })
 })
+
+function createCompany () {
+  return chai.request(app).post('/companies').send(validCompany)
+}

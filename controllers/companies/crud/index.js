@@ -51,7 +51,17 @@ function update (req, res, next) {
 }
 
 function remove (req, res, next) {
-  // TODO
+  Company.remove({name: req.params.name})
+    .then(() => {
+      req.body = {message: 'Success.'}
+      return next()
+    })
+    .catch(err => {
+      logger.error(err)
+      err = new Error('Error while removing the company instance.')
+      err.status = 500
+      return next(err)
+    })
 }
 
 /**
