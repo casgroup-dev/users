@@ -2,6 +2,7 @@ const logger = require('winston-namespace')('companies:crud')
 const {Company} = require('../../../models')
 
 const PAGE_SIZE = Number(process.env.PAGE_SIZE) || 10
+const usersPopulateFields = 'name email phone role -_id' // Explicitly exclude id
 
 /**
  * Creates a company given the data of the body.
@@ -30,7 +31,7 @@ function create (req, res, next) {
  * @param {Function} next
  */
 function get (req, res, next) {
-  Company.findOne({name: req.params.name}).populate('users', 'name email phone role')
+  Company.findOne({name: req.params.name}).populate('users', usersPopulateFields)
     .then(company => {
       if (!company) {
         const err = new Error(`There is no company with name '${req.params.name}'.`)
@@ -58,6 +59,7 @@ get.query = function (req, res, next) {
   let options = {}
   if (req.options.q) options = {$text: {$search: req.options.q}}
   Company.find(options)
+    .populate('users', usersPopulateFields)
     .skip(PAGE_SIZE * (req.options.page - 1))
     .limit(PAGE_SIZE)
     .sort('name')
@@ -85,7 +87,7 @@ function update (req, res, next) {
       company.set(req.body)
       return company.save()
     })
-    .then(company => Company.findOne({name: company.name}).populate('users', 'name email phone role'))
+    .then(company => Company.findOne({name: company.name}).populate('users', usersPopulateFields))
     .then(company => {
       req.body = getCleanCompanyData(company)
       return next()
@@ -124,7 +126,12 @@ function remove (req, res, next) {
  * @returns {{name: String, industry: String, users: Array<Object>}}
  */
 function getCleanCompanyData (company) {
-  return {name: company.name, industry: company.industry, users: company.users}
+  return {
+    id: company._id,
+    name: company.name,
+    industry: company.industry,
+    users: company.users
+  }
 }
 
 module.exports = {

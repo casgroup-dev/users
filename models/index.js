@@ -35,6 +35,10 @@ const User = mongoose.model(UserModelName, mongoose.Schema({
   name: {type: String, required: true}
 }))
 
+/**
+ * Token model to store valid tokens.
+ * @type {Model}
+ */
 const Token = mongoose.model('Token', mongoose.Schema({token: {type: String, required: true, unique: true}}))
 
 module.exports = {
