@@ -1,10 +1,9 @@
-/* global describe it */
-/* describe comes from Mochajs package */
-
-require('dotenv').config()  /* Configuro las variables de entorno */
+/* global describe it afterEach */
+/* These global variables comes from Mocha package */
+require('dotenv').config()
 
 const chai = require('chai')
-const User = require('../../models')
+const {Company, User} = require('../../models')
 const mongoose = require('../../services/mongo')
 const DatabaseCleaner = require('database-cleaner')
 
@@ -15,36 +14,51 @@ chai.should()
 /* Some dev advices:
  * In windows you can start MongoDB with mongod command. Make sure you're in correct installation directory or you've
  * added it to your PATH env variable.
+ * Also, there is a weird phenomena: when you run each test by its own they are correct, but when you run both
+ * together they have problems.
  */
 
-afterEach (function() {
-  databaseCleaner.clean(mongoose.connections[0].db, function () {
-    console.log('DB cleaned successfully.')
-  })
-})
-
-/* beforeEach (function (){
-
-}) */
+afterEach(() => databaseCleaner.clean(mongoose.connections[0].db, function () {
+  console.log('DB cleaned successfully.')
+}))
 
 describe('User model', () => {
-  it('Should create a user', done => {
-
-    const user = new User({
-      email: 'mail@mail.com',
-      company: 'DCC',
-      role: 'consultor1',
-      hashpass: 'gfbfgbgsbd',
-      name: 'Tomás Perry'
-    })
-
-    user.save()
-
-    /* If user was saved, we should be able to remove it from database */
-    User.remove({email:'mail@mail.com'}, err => {
-      chai.expect(err).to.not.exist
-      done() /* Recordar naturaleza asíncrona de Node */
-    })
-
-  }).timeout(20000)
+  const company = new Company({name: 'Microsfot', industry: 'TI'})
+  it('Should create a Company', done => {
+    company.save()
+      .then(() => Company.findOne({name: company.name}))
+      .then(company => company.remove())
+      .then(() => Company.findOne({name: company.name}))
+      .then(company => chai.expect(company).to.not.exist)
+      .then(() => done())
+      .catch(err => {
+        console.log(err)
+        chai.expect(err).to.not.exist
+      })
+  })
+  it('Should create a user and add it its company', done => {
+    const email = 'email@email.com'
+    company.save()
+      .then(company => {
+        const user = new User({
+          email: email,
+          company: company._id,
+          role: 'consultor1',
+          hashpass: 'gfbfgbgsbd',
+          name: 'Tomás Perry'
+        })
+        return user.save()
+      })
+      .then(() => User.findOne({company: company._id}).populate('company'))
+      .then(user => {
+        user.should.exist
+        user.company.name.should.be.equal(company.name)
+        user.remove()
+        done()
+      })
+      .catch(err => {
+        console.log(err)
+        chai.expect(err).to.not.exist
+      })
+  })
 })

@@ -1,13 +1,8 @@
-// Requerir el paquete
 const mongoose = require('mongoose')
-// conectarse a la db
+const logger = require('winston-namespace')('services:mongodb')
 
-/* In the future we'll need to use createConnection method instead  http://mongoosejs.com/docs/connections.html */
-mongoose.connect(`${process.env.MONGODB_HOST}:${process.env.MONGODB_PORT}/${process.env.MONGODB_NAME}`);
+mongoose.connect(`${process.env.MONGODB_HOST}:${process.env.MONGODB_PORT}/${process.env.MONGODB_NAME}`)
+  .then(() => logger.info('Mongodb connected and ready.'))
+  .catch(err => logger.error(err))
 
-mongoose.connection.on('error', console.error.bind(console, 'connection error:'))
-mongoose.connection.once('open', () => console.log('MongoDB connected.'))
-
-
-// exportar el cliente
 module.exports = mongoose
