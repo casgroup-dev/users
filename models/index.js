@@ -10,7 +10,7 @@ const CompanyModelName = 'Company'
  * @type {Model}
  */
 const Company = mongoose.model(CompanyModelName, mongoose.Schema({
-  name: {type: String, required: true},
+  name: {type: String, required: true, unique: true},
   industry: {type: String, required: true},
   users: [{type: mongoose.Schema.Types.ObjectId, ref: UserModelName}]
 }))
@@ -28,7 +28,7 @@ const User = mongoose.model(UserModelName, mongoose.Schema({
     required: true,
     enum: ['administrador', 'consultor1', 'consultor2', 'proveedor', 'gestor', 'cliente']
   },
-  hashpass: {type: String, required: true},
+  password: {type: String, required: true},
   phone: {type: String},
   name: {type: String, required: true}
 }))

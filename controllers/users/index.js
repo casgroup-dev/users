@@ -1,24 +1,39 @@
+const bcrypt = require('bcrypt')
 const logger = require('winston-namespace')('users')
+const {Company, User} = require('../../models')
 
-/* You can move each controller to its own file if you prefer */
+const saltRounds = 10
 
 const input = {
   validate: {
     /**
-     * Validate the JSON body and pass the request to the next middleware or provide
+     * Validate the JSON body and pass the user instance validated in the body. Also provides
      * a readable message that explains the error and pass the error to the error middleware.
      * @param {Object} req - Request object.
      * @param {Object} res - Response object.
      * @param {Function} next - Next function, useful to call the next middleware.
      */
     creation: (req, res, next) => {
-      let err
-      // TODO: Create conditions for the body and errors. Example:
-      if (!req.body.username) err = new Error('To create an user you need to provide a username.')
-      if (err) {
+      if (!req.body.password) {
+        const err = new Error('No password provided.')
         err.status = 400
-        logger.error(err)
-        next(err)
+        return next(err)
+      } else {
+        bcrypt.hash(req.body.password, saltRounds)
+          .then(hash => {
+            req.body.password = hash
+            const user = new User(req.body)
+            user.validate()
+              .then(() => {
+                req.body = {user}
+                next()
+              })
+              .catch(err => {
+                err.status = 400
+                logger.error(err)
+                return next(err)
+              })
+          })
       }
     },
     /**
@@ -35,8 +50,35 @@ const input = {
 }
 
 const users = {
+  /**
+   * Saves the user in the mongodb.
+   * @param {Object} req
+   * @param {Object} res
+   * @param {Function} next
+   */
   create: (req, res, next) => {
-    // TODO
+    req.body.user.save()
+      .then(user => Company.findOne({_id: user.company}).then(company => company.users.push(user)))
+      .then(() => User.findOne({email: req.body.user.email}).populate('company', 'name industry').exec())
+      .then(user => {
+        /* Clean data to send */
+        req.body = {
+          email: user.email,
+          company: {
+            name: user.company.name,
+            industry: user.company.industry
+          },
+          role: user.role,
+          name: user.name
+        }
+        next()
+      })
+      .catch(err => {
+        logger.error(err)
+        err.status = 500
+        err.message = 'Internal error while storing the new user instance.'
+        next(err)
+      })
   },
   edit: (req, res, next) => {
     // TODO
