@@ -35,7 +35,7 @@ describe('User model', () => {
         console.log(err)
         chai.expect(err).to.not.exist
       })
-  })
+  }).timeout(5000)
   it('Should create a user and add it its company', done => {
     const email = 'email@email.com'
     company.save()
@@ -60,5 +60,5 @@ describe('User model', () => {
         console.log(err)
         chai.expect(err).to.not.exist
       })
-  })
+  }).timeout(5000)
 })
