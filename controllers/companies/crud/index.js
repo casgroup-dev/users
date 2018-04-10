@@ -1,6 +1,8 @@
 const logger = require('winston-namespace')('companies:crud')
 const {Company} = require('../../../models')
 
+const PAGE_SIZE = Number(process.env.PAGE_SIZE) || 10
+
 /**
  * Creates a company given the data of the body.
  * @param {Object} req
@@ -41,6 +43,31 @@ function get (req, res, next) {
     .catch(err => {
       logger.error(err)
       err = new Error('Internal error while retrieving the company instance.')
+      err.status = 500
+      return next(err)
+    })
+}
+
+/**
+ * Get function but by a given query or if there is no query match all with pagination.
+ * @param req
+ * @param res
+ * @param next
+ */
+get.query = function (req, res, next) {
+  let options = {}
+  if (req.options.q) options = {$text: {$search: req.options.q}}
+  Company.find(options)
+    .skip(PAGE_SIZE * (req.options.page - 1))
+    .limit(PAGE_SIZE)
+    .sort('name')
+    .then(companies => {
+      req.body = companies.map(getCleanCompanyData)
+      return next()
+    })
+    .catch(err => {
+      logger.error(err)
+      err = new Error('Internal error while performing search request.')
       err.status = 500
       return next(err)
     })

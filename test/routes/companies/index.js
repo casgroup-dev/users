@@ -15,7 +15,7 @@ afterEach(() => databaseCleaner.clean(mongoose.connections[0].db, function () {
   console.log('DB cleaned successfully.')
 }))
 
-const validCompany = {name: 'Microsoft', industry: 'TI'}
+const validCompany = {name: 'Microsoft Corporates INC', industry: 'TI'}
 
 describe('COMPANIES', () => {
   it('Should get an error if the input for creation is bad', done => {
@@ -70,6 +70,32 @@ describe('COMPANIES', () => {
           .send({name: 'Apple'})
       })
       .then(res => {
+        console.log(res.body)
+        done()
+      })
+      .catch(err => console.log(err))
+  })
+  it('Should get the companies that match with the query', done => {
+    createCompany()
+      .then(() => {
+        return chai.request(app)
+          .get('/companies?q=microsoft')
+      })
+      .then(res => {
+        res.body.should.have.lengthOf(1)
+        console.log(res.body)
+        done()
+      })
+      .catch(err => console.log(err))
+  })
+  it('Should get all the companies', done => {
+    createCompany()
+      .then(() => {
+        return chai.request(app)
+          .get('/companies')
+      })
+      .then(res => {
+        res.body.should.have.lengthOf(1)
         console.log(res.body)
         done()
       })
