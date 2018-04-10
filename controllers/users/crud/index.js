@@ -15,10 +15,7 @@ function create (req, res, next) {
       req.body = user
       next()
     })
-    .catch(err => {
-      logger.error(err)
-      next(err)
-    })
+    .catch(err => next(err))
 }
 
 function update (req, res, next) {
@@ -31,10 +28,7 @@ function get (req, res, next) {
       req.body = user
       next()
     })
-    .catch(err => {
-      logger.error(err)
-      return next(err)
-    })
+    .catch(err => next(err))
 }
 
 function remove (req, res, next) {
@@ -51,7 +45,7 @@ function getCleanAndPopulatedUser (email) {
     .then(user => {
       if (!user) {
         const err = new Error(`No user with email '${email}'.`)
-        err.status = 400
+        err.status = 404
         throw err
       }
       return {
@@ -66,8 +60,10 @@ function getCleanAndPopulatedUser (email) {
     })
     .catch(err => {
       logger.error(err)
-      err = new Error('Internal error while retrieving the user from the DB.')
-      err.status = 500
+      if (err.status !== 404) {
+        err = new Error('Internal error while retrieving the user from the DB.')
+        err.status = 500
+      }
       throw err
     })
 }
