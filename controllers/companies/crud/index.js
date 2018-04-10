@@ -46,10 +46,37 @@ function get (req, res, next) {
     })
 }
 
+/**
+ * Updates a company with the data coming from the body of the request.
+ * @param {Object} req
+ * @param {Object} res
+ * @param {Function} next
+ */
 function update (req, res, next) {
-  // TODO
+  Company.findOne({name: req.params.name})
+    .then(company => {
+      company.set(req.body)
+      return company.save()
+    })
+    .then(company => Company.findOne({name: company.name}).populate('users', 'name email phone role'))
+    .then(company => {
+      req.body = getCleanCompanyData(company)
+      return next()
+    })
+    .catch(err => {
+      logger.error(err)
+      err = new Error(`Could not update company named '${req.params.name}'.`)
+      err.status = 500
+      return next(err)
+    })
 }
 
+/**
+ * Removes a company by its name.
+ * @param {Object} req
+ * @param {Object} res
+ * @param {Function} next
+ */
 function remove (req, res, next) {
   Company.remove({name: req.params.name})
     .then(() => {

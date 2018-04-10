@@ -23,9 +23,6 @@ const input = {
           logger.error(err)
           return next(err)
         })
-    },
-    edition: (req, res, next) => {
-      // TODO
     }
   }
 }

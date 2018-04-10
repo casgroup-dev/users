@@ -62,6 +62,19 @@ describe('COMPANIES', () => {
           .catch(err => console.log(err))
       })
   })
+  it('Should create and update a company', done => {
+    createCompany()
+      .then(() => {
+        return chai.request(app)
+          .put(`/companies/${validCompany.name}`)
+          .send({name: 'Apple'})
+      })
+      .then(res => {
+        console.log(res.body)
+        done()
+      })
+      .catch(err => console.log(err))
+  })
 })
 
 function createCompany () {

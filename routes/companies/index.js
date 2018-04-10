@@ -16,7 +16,6 @@ router.get('/:name',
 
 /* Edit company using PUT method */
 router.put('/:name',
-  input.validate.edition,
   companies.update,
   result.send
 )
