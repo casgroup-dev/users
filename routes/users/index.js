@@ -16,7 +16,6 @@ router.get('/:email',
 
 /* Edit user using PUT method */
 router.put('/:email',
-  input.validate.edition,
   users.update,
   result.send
 )

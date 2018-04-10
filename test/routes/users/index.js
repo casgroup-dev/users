@@ -4,7 +4,7 @@ require('dotenv').config()
 const chai = require('chai')
 const chaiHttp = require('chai-http')
 const app = require('../../../app')
-const {Company, User} = require('../../../models')
+const {Company} = require('../../../models')
 const mongoose = require('../../../services/mongo')
 const DatabaseCleaner = require('database-cleaner')
 
@@ -58,6 +58,21 @@ describe('USERS', () => {
         console.log(res.body)
         done()
       })
+  })
+  it('Should create a user and edit him', done => {
+    const secondEmail = 'second@email.com'
+    createUser()
+      .then(res => {
+        return chai.request(app)
+          .put(`/users/${res.body.email}`)
+          .send({email: secondEmail})
+      })
+      .then(res => {
+        res.body.email.should.be.equal(secondEmail)
+        console.log(res.body)
+        done()
+      })
+      .catch(err => console.log(err))
   })
 })
 

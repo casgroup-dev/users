@@ -21,8 +21,27 @@ function create (req, res, next) {
     })
 }
 
+/**
+ * Update the data of the user by its name.
+ * @param {Object} req
+ * @param {Object} res
+ * @param {Function} next
+ */
 function update (req, res, next) {
-  // TODO
+  User.findOne({email: req.params.email})
+    .then(user => {
+      user.set(req.body)
+      return user.save()
+    })
+    .then(user => getCleanAndPopulatedUser(user.email))
+    .then(user => {
+      req.body = user
+      return next()
+    })
+    .catch(err => {
+      logger.error(err)
+      return next(err)
+    })
 }
 
 function get (req, res, next) {
