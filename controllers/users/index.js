@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt')
+const users = require('./crud')
 const logger = require('winston-namespace')('users')
-const {Company, User} = require('../../models')
+const {User} = require('../../models')
 
 const saltRounds = 10
 
@@ -46,48 +47,6 @@ const input = {
       // TODO
       next()
     }
-  }
-}
-
-const users = {
-  /**
-   * Saves the user in the mongodb.
-   * @param {Object} req
-   * @param {Object} res
-   * @param {Function} next
-   */
-  create: (req, res, next) => {
-    req.body.user.save()
-      .then(user => Company.findOne({_id: user.company}).then(company => company.users.push(user)))
-      .then(() => User.findOne({email: req.body.user.email}).populate('company', 'name industry').exec())
-      .then(user => {
-        /* Clean data to send */
-        req.body = {
-          email: user.email,
-          company: {
-            name: user.company.name,
-            industry: user.company.industry
-          },
-          role: user.role,
-          name: user.name
-        }
-        next()
-      })
-      .catch(err => {
-        logger.error(err)
-        err.status = 500
-        err.message = 'Internal error while storing the new user instance.'
-        next(err)
-      })
-  },
-  edit: (req, res, next) => {
-    // TODO
-  },
-  get: (req, res, next) => {
-    // TODO
-  },
-  delete: (req, res, next) => {
-    // TODO
   }
 }
 
