@@ -63,14 +63,19 @@ const users = {
      * @param {Function} next - Next function, useful to call the next middleware.
      */
     create: (req, res, next) => {
-      const token = jwt.sign({
-        email: req.body.user.email,
-        role: req.body.user.role,
-        company: req.body.user.company
-      }, process.env.JWT_SECRET)
-      new Token({token}).save()
-        .then(() => {
-          req.body = {token}
+      /* Check if exists a token for the user */
+      Token.findOne({email: req.body.user.email})
+        .then(tokenInstance => {
+          if (tokenInstance) return tokenInstance
+          const token = jwt.sign({
+            email: req.body.user.email,
+            role: req.body.user.role,
+            company: req.body.user.company
+          }, process.env.JWT_SECRET)
+          return new Token({token, email: req.body.user.email}).save()
+        })
+        .then(tokenInstance => {
+          req.body = {token: tokenInstance.token}
           return next()
         })
         .catch(err => {
@@ -95,14 +100,11 @@ const users = {
         res.status(403)
         return next(err)
       }
-      const token = req.params.token
+      const token = req.params.token || req.options.token
       jwt.verify(token, process.env.JWT_SECRET, err => {
         if (err) return catchError(err)
         Token.findOne({token})
-          .then(() => {
-            req.body = {message: 'Valid token.'}
-            return next()
-          })
+          .then(() => next())
           .catch(err => catchError(err))
       })
     }

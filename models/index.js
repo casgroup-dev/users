@@ -3,6 +3,7 @@ require('mongoose-type-email')
 
 const UserModelName = 'User'
 const CompanyModelName = 'Company'
+const roles = {admin: 'admin', proveedor: 'proveedor', consultor: 'consultor', cliente: 'cliente'}
 
 /**
  * Company model, it has an array of users' ids that must be populated to get it.
@@ -20,7 +21,7 @@ const Company = mongoose.model(CompanyModelName, companySchema)
 /**
  * User model, it has a company that is a reference the the Company model. To query this it must be populated.
  * See: http://mongoosejs.com/docs/populate.html
- * @type {Model}
+ * @type
  */
 const User = mongoose.model(UserModelName, mongoose.Schema({
   email: {type: mongoose.SchemaTypes.Email, required: true, unique: true},
@@ -28,7 +29,7 @@ const User = mongoose.model(UserModelName, mongoose.Schema({
   role: {
     type: String,
     required: true,
-    enum: ['administrador', 'consultor1', 'consultor2', 'proveedor', 'gestor', 'cliente']
+    enum: Object.values(roles)
   },
   password: {type: String, required: true},
   phone: {type: String},
@@ -39,10 +40,14 @@ const User = mongoose.model(UserModelName, mongoose.Schema({
  * Token model to store valid tokens.
  * @type {Model}
  */
-const Token = mongoose.model('Token', mongoose.Schema({token: {type: String, required: true, unique: true}}))
+const Token = mongoose.model('Token', mongoose.Schema({
+  token: {type: String, required: true, unique: true},
+  email: {type: mongoose.SchemaTypes.Email, required: true, unique: true}
+}))
 
 module.exports = {
   Company,
   Token,
-  User
+  User,
+  roles
 }

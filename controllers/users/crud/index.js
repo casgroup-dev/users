@@ -18,10 +18,7 @@ function create (req, res, next) {
       req.body = user
       next()
     })
-    .catch(err => {
-      logger.error(err)
-      next(err)
-    })
+    .catch(err => next(err))
 }
 
 /**
@@ -36,15 +33,22 @@ function update (req, res, next) {
       user.set(req.body)
       return user.save()
     })
+    .then(user => {
+      /* If set the company, update company's users */
+      if (req.body.company) {
+        Company.findOne({_id: user.company}).then(company => {
+          company.users.push(user)
+          company.save()
+        })
+      }
+      return user
+    })
     .then(user => getCleanAndPopulatedUser(user.email))
     .then(user => {
       req.body = user
       return next()
     })
-    .catch(err => {
-      logger.error(err)
-      return next(err)
-    })
+    .catch(err => next(err))
 }
 
 function get (req, res, next) {
@@ -53,10 +57,7 @@ function get (req, res, next) {
       req.body = user
       next()
     })
-    .catch(err => {
-      logger.error(err)
-      return next(err)
-    })
+    .catch(err => next(err))
 }
 
 /**
@@ -85,27 +86,26 @@ function remove (req, res, next) {
  * @private
  */
 function getCleanAndPopulatedUser (email) {
-  return User.findOne({email}).populate('company', 'name industry').exec()
+  return User.findOne({email}).populate('company', 'name industry -_id').exec()
     .then(user => {
       if (!user) {
         const err = new Error(`No user with email '${email}'.`)
-        err.status = 400
+        err.status = 404
         throw err
       }
       return {
         email: user.email,
-        company: {
-          name: user.company.name,
-          industry: user.company.industry
-        },
+        company: user.company,
         role: user.role,
         name: user.name
       }
     })
     .catch(err => {
       logger.error(err)
-      err = new Error('Internal error while retrieving the user from the DB.')
-      err.status = 500
+      if (err.status !== 404) {
+        err = new Error('Internal error while retrieving the user from the DB.')
+        err.status = 500
+      }
       throw err
     })
 }
