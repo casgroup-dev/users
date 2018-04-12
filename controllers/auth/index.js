@@ -1,8 +1,7 @@
 const logger = require('winston-namespace')('auth')
 const bcrypt = require('bcrypt')
-const jwt = require('jsonwebtoken')
-const {result} = require('../users')
-const {User, Token} = require('../../models')
+const token = require('./token')
+const {User} = require('../../models')
 
 const input = {
   validate: {
@@ -52,67 +51,11 @@ const users = {
         }
         return next()
       })
-  },
-  token: {
-    /**
-     * Creates a JSON webtoken (https://www.npmjs.com/package/jsonwebtoken) with the data
-     * relative to this user as username and role (to know his permissions) and calls the
-     * next middleware.
-     * @param {Object} req - Request object.
-     * @param {Object} res - Response object.
-     * @param {Function} next - Next function, useful to call the next middleware.
-     */
-    create: (req, res, next) => {
-      /* Check if exists a token for the user */
-      Token.findOne({email: req.body.user.email})
-        .then(tokenInstance => {
-          if (tokenInstance) return tokenInstance
-          const token = jwt.sign({
-            email: req.body.user.email,
-            role: req.body.user.role,
-            company: req.body.user.company
-          }, process.env.JWT_SECRET)
-          return new Token({token, email: req.body.user.email}).save()
-        })
-        .then(tokenInstance => {
-          req.body = {token: tokenInstance.token}
-          return next()
-        })
-        .catch(err => {
-          logger.error(err)
-          err = new Error('Internal error while storing token.')
-          err.status = 500
-          return next(err)
-        })
-    },
-    /**
-     * Validates the token and return 200 or 403 status code. To validate it, it must be in DB and be a valid
-     * token for the current secret.
-     * @param {Object} req - Request object.
-     * @param {Object} res - Response object.
-     * @param {Function} next - Next function, useful to call the next middleware.
-     */
-    validate: (req, res, next) => {
-      const catchError = err => {
-        logger.error(err)
-        err = new Error('Not a valid token.')
-        err.status = 403
-        res.status(403)
-        return next(err)
-      }
-      const token = req.params.token || req.options.token
-      jwt.verify(token, process.env.JWT_SECRET, err => {
-        if (err) return catchError(err)
-        Token.findOne({token})
-          .then(() => next())
-          .catch(err => catchError(err))
-      })
-    }
   }
 }
 
 module.exports = {
   input,
   users,
-  result
+  token
 }
