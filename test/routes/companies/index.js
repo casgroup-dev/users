@@ -30,6 +30,21 @@ describe('COMPANIES', () => {
       })
       .catch(err => console.log(err))
   })
+  it('Should get an error when there is no token', done => {
+    const validateError = res => {
+      res.body.should.have.property('error')
+      res.body.error.status.should.be.equal(403)
+    }
+    chai.request(app).post('/companies')
+      .then(validateError)
+      .then(() => chai.request(app).delete('/companies/anyCompany'))
+      .then(validateError)
+      .then(() => chai.request(app).put('/companies/anyCompany'))
+      .then(validateError)
+      .then(() => chai.request(app).get('/companies'))
+      .then(validateError)
+      .then(done)
+  })
   it('Should create a company and get it', done => {
     const company = {name: 'Facebook', industry: 'TI'}
     const validateCompany = body => {
