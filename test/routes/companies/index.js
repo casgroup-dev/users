@@ -13,10 +13,6 @@ chai.use(chaiHttp)
 chai.should()
 const databaseCleaner = new DatabaseCleaner('mongodb')
 
-after(() => databaseCleaner.clean(mongoose.connections[0].db, function () {
-  console.log('DB cleaned successfully.')
-}))
-
 const validCompany = {name: 'Microsoft Corporates INC', industry: 'TI'}
 const userData = {
   email: 'example@email.com',
@@ -26,6 +22,10 @@ const userData = {
 }
 
 describe('COMPANIES', () => {
+  after(done => databaseCleaner.clean(mongoose.connections[0].db, function () {
+    console.log('DB cleaned successfully.')
+    done()
+  }))
   it('Should get an error if the input for creation is bad', done => {
     createUserAndGetToken(roles.admin)
       .then(token => chai.request(app).post(`/companies?token=${token}`).send({name: 'Microsoft'}))

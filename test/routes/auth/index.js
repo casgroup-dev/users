@@ -11,11 +11,11 @@ chai.use(chaiHttp)
 chai.should()
 const databaseCleaner = new DatabaseCleaner('mongodb')
 
-afterEach(() => databaseCleaner.clean(mongoose.connections[0].db, function () {
-  console.log('DB cleaned successfully.')
-}))
-
 describe('AUTH', () => {
+  afterEach(done => databaseCleaner.clean(mongoose.connections[0].db, function () {
+    console.log('DB cleaned successfully.')
+    done()
+  }))
   it('Should return the error indicating that the email does not exists', done => {
     chai.request(app)
       .post('/auth/login')
@@ -28,7 +28,7 @@ describe('AUTH', () => {
   })
   it('Should perform a correct login', done => {
     createUser()
-      .then(res => {
+      .then(({res}) => {
         return chai.request(app)
           .post('/auth/login')
           .send({email: res.body.email, password: userPassword})
@@ -41,7 +41,7 @@ describe('AUTH', () => {
   })
   it('Should return an error with an incorrect login', done => {
     createUser()
-      .then(res => {
+      .then(({res}) => {
         return chai.request(app)
           .post('/auth/login')
           .send({email: res.body.email, password: 'this is not the password'})
@@ -54,7 +54,7 @@ describe('AUTH', () => {
   })
   it('Should perform a correct login and validates the token given', done => {
     createUser()
-      .then(res => {
+      .then(({res}) => {
         return chai.request(app)
           .post('/auth/login')
           .send({email: res.body.email, password: userPassword})
@@ -65,7 +65,6 @@ describe('AUTH', () => {
           .get(`/auth/${res.body.token}`)
       })
       .then(res => {
-        res.body.should.have.property('message')
         res.status.should.be.equal(200)
         console.log(res.body)
         done()
