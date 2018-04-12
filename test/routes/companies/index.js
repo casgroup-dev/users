@@ -6,7 +6,8 @@ const chaiHttp = require('chai-http')
 const DatabaseCleaner = require('database-cleaner')
 const app = require('../../../app')
 const mongoose = require('../../../services/mongo')
-const {roles, Company} = require('../../../models')
+const {roles, Company, User} = require('../../../models')
+const {hashPassword} = require('../../../controllers/users')
 
 chai.use(chaiHttp)
 chai.should()
@@ -17,7 +18,12 @@ after(() => databaseCleaner.clean(mongoose.connections[0].db, function () {
 }))
 
 const validCompany = {name: 'Microsoft Corporates INC', industry: 'TI'}
-const userData = {email: 'example@email.com', name: 'Fabián Souto', role: 'proveedor', password: 'myPassword'}
+const userData = {
+  email: 'example@email.com',
+  name: 'Fabián Souto',
+  role: 'proveedor',
+  password: 'mypassword'
+}
 
 describe('COMPANIES', () => {
   it('Should get an error if the input for creation is bad', done => {
@@ -123,45 +129,34 @@ describe('COMPANIES', () => {
   })
 })
 
-function createCompany () {
+function createUserAndGetToken (role) {
   return Company.findOne(validCompany)
     .then(company => {
       if (company) return company
       return new Company(validCompany).save()
     })
-}
-
-function addUser (role) {
-  return function (company) {
-    /* Format data of user */
-    const user = {...userData}
-    user.company = company._id
-    if (role) user.role = role
-    /* Get user if exists */
-    return chai.request(app).get(`/users/${user.email}`)
-      .then(res => {
-        if (!res.body.error) {
-          /* Set the company if it was removed */
-          return chai.request(app).put(`/users/${user.email}`).send({company: company._id})
-        }
-        /* If does not exists, create */
-        return chai.request(app)
-          .post('/users')
-          .send(user)
-      })
-      .then(() => {
-        /* Login after a timeout */
-        return new Promise(resolve => {
-          setTimeout(() => chai.request(app).post('/auth/login').send({
-            email: user.email,
-            password: user.password
-          }).then(res => resolve(res)), 100)
+    .then(company => {
+      /* Format data of user */
+      const user = {...userData}
+      user.company = company._id
+      user.rawPassword = user.password
+      user.password = hashPassword(user.password)
+      if (role) user.role = role
+      /* Get user if exists */
+      return User.findOne({email: user.email})
+        .then(user => user ? user.remove() : null)
+        .then(() => new User(user).save())
+        /* Check if the company has the user */
+        .then(user => {
+          if (company.users.indexOf(user._id) === -1) {
+            company.users.push(user._id)
+            return company.save()
+          }
         })
-      })
-      .then(res => res.body.token)
-  }
-}
-
-function createUserAndGetToken (role) {
-  return createCompany().then(addUser(role))
+        .then(() => chai.request(app).post('/auth/login').send({
+          email: user.email,
+          password: user.rawPassword
+        }))
+        .then(res => res.body.token)
+    })
 }
