@@ -17,7 +17,7 @@ const validCompany = {name: 'Microsoft Corporates INC', industry: 'TI'}
 const userData = {
   email: 'example@email.com',
   name: 'Fabián Souto',
-  role: 'proveedor',
+  role: roles.user,
   password: 'mypassword'
 }
 

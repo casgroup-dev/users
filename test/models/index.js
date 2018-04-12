@@ -3,7 +3,7 @@
 require('dotenv').config()
 
 const chai = require('chai')
-const {Company, User} = require('../../models')
+const {Company, User, roles} = require('../../models')
 const mongoose = require('../../services/mongo')
 const DatabaseCleaner = require('database-cleaner')
 
@@ -41,7 +41,7 @@ describe('User model', () => {
       .then(company => new User({
         email: email,
         company: company._id,
-        role: 'proveedor',
+        role: roles.user,
         password: 'gfbfgbgsbd',
         name: 'Tomás Perry'
       }).save())
