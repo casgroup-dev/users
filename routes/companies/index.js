@@ -25,6 +25,7 @@ router.get('/', [
 router.get('/:id',
   token.validate,
   token.validate.roles([roles.admin, roles.companyAdmin]),
+  token.validate.company,
   companies.get,
   result.send
 )
@@ -33,6 +34,7 @@ router.get('/:id',
 router.put('/:id',
   token.validate,
   token.validate.roles([roles.admin, roles.companyAdmin]),
+  token.validate.company,
   companies.update,
   result.send
 )
