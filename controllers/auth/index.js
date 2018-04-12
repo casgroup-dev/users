@@ -33,7 +33,7 @@ const users = {
    * @param {Function} next - Next function, useful to call the next middleware.
    */
   login: (req, res, next) => {
-    User.findOne({email: req.body.email})
+    User.findOne({email: req.body.email}).populate('company')
       .then(user => {
         if (!user) {
           const err = new Error(`There is no user with email '${req.body.email}'.`)

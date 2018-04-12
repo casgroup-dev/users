@@ -22,23 +22,23 @@ router.get('/', [
 ])
 
 /* Get information of the company using GET method */
-router.get('/:name',
+router.get('/:id',
   token.validate,
-  token.validate.roles([roles.admin]),
+  token.validate.roles([roles.admin, roles.companyAdmin]),
   companies.get,
   result.send
 )
 
 /* Edit company using PUT method */
-router.put('/:name',
+router.put('/:id',
   token.validate,
-  token.validate.roles([roles.admin]),
+  token.validate.roles([roles.admin, roles.companyAdmin]),
   companies.update,
   result.send
 )
 
 /* Delete a company using DELETE method */
-router.delete('/:name',
+router.delete('/:id',
   token.validate,
   token.validate.roles([roles.admin]),
   companies.remove,

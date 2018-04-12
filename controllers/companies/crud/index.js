@@ -31,7 +31,7 @@ function create (req, res, next) {
  * @param {Function} next
  */
 function get (req, res, next) {
-  Company.findOne({name: req.params.name}).populate('users', usersPopulateFields)
+  Company.findOne({_id: req.params.id}).populate('users', usersPopulateFields)
     .then(company => {
       if (!company) {
         const err = new Error(`There is no company with name '${req.params.name}'.`)
@@ -82,7 +82,7 @@ get.query = function (req, res, next) {
  * @param {Function} next
  */
 function update (req, res, next) {
-  Company.findOne({name: req.params.name})
+  Company.findOne({_id: req.params.id})
     .then(company => {
       company.set(req.body)
       return company.save()
@@ -107,7 +107,7 @@ function update (req, res, next) {
  * @param {Function} next
  */
 function remove (req, res, next) {
-  Company.remove({name: req.params.name})
+  Company.remove({_id: req.params.id})
     .then(() => {
       req.body = {message: 'Success.'}
       return next()

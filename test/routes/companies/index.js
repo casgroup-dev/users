@@ -14,6 +14,7 @@ chai.should()
 const databaseCleaner = new DatabaseCleaner('mongodb')
 
 const validCompany = {name: 'Microsoft Corporates INC', industry: 'TI'}
+let companyId // Populated on createUser
 const userData = {
   email: 'example@email.com',
   name: 'Fabián Souto',
@@ -69,7 +70,7 @@ describe('COMPANIES', () => {
       .then(res => {
         validateCompany(res.body)
         return chai.request(app)
-          .get(`/companies/${res.body.name}?token=${token}`)
+          .get(`/companies/${res.body.id}?token=${token}`)
       })
       .then(res => {
         validateCompany(res.body)
@@ -81,7 +82,7 @@ describe('COMPANIES', () => {
     createUserAndGetToken()
       .then(token => {
         chai.request(app)
-          .delete(`/companies/${validCompany.name}?token=${token}`)
+          .delete(`/companies/${companyId}?token=${token}`)
           .then(res => {
             res.status.should.be.equal(200)
             console.log(res.body)
@@ -94,7 +95,7 @@ describe('COMPANIES', () => {
     createUserAndGetToken(roles.admin)
       .then(token => {
         return chai.request(app)
-          .put(`/companies/${validCompany.name}?token=${token}`)
+          .put(`/companies/${companyId}?token=${token}`)
           .send({name: 'Apple'})
       })
       .then(res => {
@@ -136,6 +137,8 @@ function createUserAndGetToken (role) {
       return new Company(validCompany).save()
     })
     .then(company => {
+      /* Populate company id */
+      companyId = company._id
       /* Format data of user */
       const user = {...userData}
       user.company = company._id
