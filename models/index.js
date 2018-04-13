@@ -14,7 +14,7 @@ const companySchema = mongoose.Schema({
   business_name: {type: String, required: true, unique: true, index: true},
   fantasy_name: {type: String, required: true, unique: true, index: true},
   rut: {type:Number, required: true, unique: true},  // TODO: RUT must be validated
-  industry: [{type: String, required: true, index: true}],
+  industries: [{type: String, required: true, index: true}],
   legal_representative: {type: String, required: true},
   legal_rep_email: {type: mongoose.SchemaTypes.Email, required: true},
   legal_rep_phone: {type: Number},  // TODO: phone must be validated

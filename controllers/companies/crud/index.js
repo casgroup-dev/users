@@ -31,10 +31,10 @@ function create (req, res, next) {
  * @param {Function} next
  */
 function get (req, res, next) {
-  Company.findOne({name: req.params.name}).populate('users', usersPopulateFields)
+  Company.findOne({business_name: req.params.business_name}).populate('users', usersPopulateFields)
     .then(company => {
       if (!company) {
-        const err = new Error(`There is no company with name '${req.params.name}'.`)
+        const err = new Error(`There is no company with business name '${req.params.business_name}'.`)
         err.status = 400
         throw err
       }
@@ -62,7 +62,7 @@ get.query = function (req, res, next) {
     .populate('users', usersPopulateFields)
     .skip(PAGE_SIZE * (req.options.page - 1))
     .limit(PAGE_SIZE)
-    .sort('name')
+    .sort('business_name')
     .then(companies => {
       req.body = companies.map(getCleanCompanyData)
       return next()
@@ -82,32 +82,32 @@ get.query = function (req, res, next) {
  * @param {Function} next
  */
 function update (req, res, next) {
-  Company.findOne({name: req.params.name})
+  Company.findOne({business_name: req.params.business_name})
     .then(company => {
       company.set(req.body)
       return company.save()
     })
-    .then(company => Company.findOne({name: company.name}).populate('users', usersPopulateFields))
+    .then(company => Company.findOne({business_name: company.business_name}).populate('users', usersPopulateFields))
     .then(company => {
       req.body = getCleanCompanyData(company)
       return next()
     })
     .catch(err => {
       logger.error(err)
-      err = new Error(`Could not update company named '${req.params.name}'.`)
+      err = new Error(`Could not update company with business name'${req.params.business_name}'.`)
       err.status = 500
       return next(err)
     })
 }
 
 /**
- * Removes a company by its name.
+ * Removes a company by its business name.
  * @param {Object} req
  * @param {Object} res
  * @param {Function} next
  */
 function remove (req, res, next) {
-  Company.remove({name: req.params.name})
+  Company.remove({business_name: req.params.business_name})
     .then(() => {
       req.body = {message: 'Success.'}
       return next()
@@ -128,8 +128,13 @@ function remove (req, res, next) {
 function getCleanCompanyData (company) {
   return {
     id: company._id,
-    name: company.name,
-    industry: company.industry,
+    business_name: company.business_name,
+    fantasy_name: company.fantasy_name,
+    rut: company.rut,
+    industries: company.industries,
+    legal_representative: company.legal_representative,
+    legal_rep_email: company.legal_rep_email,
+    legal_rep_phone: company.legal_rep_phone,
     users: company.users
   }
 }
