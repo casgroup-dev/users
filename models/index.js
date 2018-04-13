@@ -9,11 +9,13 @@ const CompanyModelName = 'Company'
  * See: http://mongoosejs.com/docs/populate.html
  * @type {Model}
  */
-const Company = mongoose.model(CompanyModelName, mongoose.Schema({
-  name: {type: String, required: true, unique: true},
-  industry: {type: String, required: true},
+const companySchema = mongoose.Schema({
+  name: {type: String, required: true, unique: true, index: true},
+  industry: {type: String, required: true, index: true},
   users: [{type: mongoose.Schema.Types.ObjectId, ref: UserModelName}]
-}))
+})
+companySchema.index({'$**': 'text'})
+const Company = mongoose.model(CompanyModelName, companySchema)
 
 /**
  * User model, it has a company that is a reference the the Company model. To query this it must be populated.
@@ -33,6 +35,10 @@ const User = mongoose.model(UserModelName, mongoose.Schema({
   name: {type: String, required: true}
 }))
 
+/**
+ * Token model to store valid tokens.
+ * @type {Model}
+ */
 const Token = mongoose.model('Token', mongoose.Schema({token: {type: String, required: true, unique: true}}))
 
 module.exports = {

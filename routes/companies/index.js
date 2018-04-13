@@ -8,6 +8,13 @@ router.post('/',
   result.send
 )
 
+/* Get all the companies or those that match the given query */
+router.get('/',
+  input.format.options,
+  companies.get.query,
+  result.send
+)
+
 /* Get information of the company using GET method */
 router.get('/:name',
   companies.get,

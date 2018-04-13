@@ -15,7 +15,8 @@ afterEach(() => databaseCleaner.clean(mongoose.connections[0].db, function () {
   console.log('DB cleaned successfully.')
 }))
 
-const validCompany = {name: 'Microsoft', industry: 'TI'}
+const validCompany = {name: 'Microsoft Corporates INC', industry: 'TI'}
+const userData = {email: 'example@email.com', name: 'Fabián Souto', role: 'proveedor', password: 'myPassword'}
 
 describe('COMPANIES', () => {
   it('Should get an error if the input for creation is bad', done => {
@@ -64,6 +65,7 @@ describe('COMPANIES', () => {
   })
   it('Should create and update a company', done => {
     createCompany()
+      .then(addUser)
       .then(() => {
         return chai.request(app)
           .put(`/companies/${validCompany.name}`)
@@ -71,6 +73,36 @@ describe('COMPANIES', () => {
       })
       .then(res => {
         console.log(res.body)
+        res.body.name.should.be.equal('Apple')
+        res.body.users[0].email.should.be.equal(userData.email)
+        done()
+      })
+      .catch(err => console.log(err))
+  })
+  it('Should get the companies that match with the query', done => {
+    createCompany()
+      .then(addUser)
+      .then(() => {
+        return chai.request(app)
+          .get('/companies?q=microsoft')
+      })
+      .then(res => {
+        res.body.should.have.lengthOf(1)
+        console.log(JSON.stringify(res.body, null, 2))
+        done()
+      })
+      .catch(err => console.log(err))
+  })
+  it('Should get all the companies', done => {
+    createCompany()
+      .then(addUser)
+      .then(() => {
+        return chai.request(app)
+          .get('/companies')
+      })
+      .then(res => {
+        res.body.should.have.lengthOf(1)
+        console.log(JSON.stringify(res.body, null, 2))
         done()
       })
       .catch(err => console.log(err))
@@ -79,4 +111,11 @@ describe('COMPANIES', () => {
 
 function createCompany () {
   return chai.request(app).post('/companies').send(validCompany)
+}
+
+function addUser (companyCreationResponse) {
+  userData.company = companyCreationResponse.body.id
+  return chai.request(app)
+    .post('/users')
+    .send(userData)
 }

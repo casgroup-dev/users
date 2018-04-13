@@ -1,6 +1,9 @@
 const logger = require('winston-namespace')('companies:crud')
 const {Company} = require('../../../models')
 
+const PAGE_SIZE = Number(process.env.PAGE_SIZE) || 10
+const usersPopulateFields = 'name email phone role -_id' // Explicitly exclude id
+
 /**
  * Creates a company given the data of the body.
  * @param {Object} req
@@ -28,7 +31,7 @@ function create (req, res, next) {
  * @param {Function} next
  */
 function get (req, res, next) {
-  Company.findOne({name: req.params.name}).populate('users', 'name email phone role')
+  Company.findOne({name: req.params.name}).populate('users', usersPopulateFields)
     .then(company => {
       if (!company) {
         const err = new Error(`There is no company with name '${req.params.name}'.`)
@@ -47,6 +50,32 @@ function get (req, res, next) {
 }
 
 /**
+ * Get function but by a given query or if there is no query match all with pagination.
+ * @param req
+ * @param res
+ * @param next
+ */
+get.query = function (req, res, next) {
+  let options = {}
+  if (req.options.q) options = {$text: {$search: req.options.q}}
+  Company.find(options)
+    .populate('users', usersPopulateFields)
+    .skip(PAGE_SIZE * (req.options.page - 1))
+    .limit(PAGE_SIZE)
+    .sort('name')
+    .then(companies => {
+      req.body = companies.map(getCleanCompanyData)
+      return next()
+    })
+    .catch(err => {
+      logger.error(err)
+      err = new Error('Internal error while performing search request.')
+      err.status = 500
+      return next(err)
+    })
+}
+
+/**
  * Updates a company with the data coming from the body of the request.
  * @param {Object} req
  * @param {Object} res
@@ -58,7 +87,7 @@ function update (req, res, next) {
       company.set(req.body)
       return company.save()
     })
-    .then(company => Company.findOne({name: company.name}).populate('users', 'name email phone role'))
+    .then(company => Company.findOne({name: company.name}).populate('users', usersPopulateFields))
     .then(company => {
       req.body = getCleanCompanyData(company)
       return next()
@@ -97,7 +126,12 @@ function remove (req, res, next) {
  * @returns {{name: String, industry: String, users: Array<Object>}}
  */
 function getCleanCompanyData (company) {
-  return {name: company.name, industry: company.industry, users: company.users}
+  return {
+    id: company._id,
+    name: company.name,
+    industry: company.industry,
+    users: company.users
+  }
 }
 
 module.exports = {

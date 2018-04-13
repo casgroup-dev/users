@@ -9,7 +9,10 @@ const logger = require('winston-namespace')('users:crud')
  */
 function create (req, res, next) {
   req.body.user.save()
-    .then(user => Company.findOne({_id: user.company}).then(company => company.users.push(user)))
+    .then(user => Company.findOne({_id: user.company}).then(company => {
+      company.users.push(user)
+      return company.save()
+    }))
     .then(() => getCleanAndPopulatedUser(req.body.user.email))
     .then(user => {
       req.body = user
