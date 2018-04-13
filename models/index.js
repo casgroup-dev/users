@@ -33,7 +33,10 @@ const User = mongoose.model(UserModelName, mongoose.Schema({
   name: {type: String, required: true}
 }))
 
+const Token = mongoose.model('Token', mongoose.Schema({token: {type: String, required: true, unique: true}}))
+
 module.exports = {
   Company,
+  Token,
   User
 }

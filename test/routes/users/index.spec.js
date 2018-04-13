@@ -12,6 +12,8 @@ chai.use(chaiHttp)
 chai.should()
 const databaseCleaner = new DatabaseCleaner('mongodb')
 
+const userPassword = 'myPassword'
+
 afterEach(() => databaseCleaner.clean(mongoose.connections[0].db, function () {
   console.log('DB cleaned successfully.')
 }))
@@ -68,8 +70,13 @@ function createUser () {
           email: 'example@microsoft.com',
           company: company._id,
           role: 'proveedor',
-          password: 'myPassword',
+          password: userPassword,
           name: 'Felipe Gonzales'
         })
     })
+}
+
+module.exports = {
+  createUser,
+  userPassword
 }
