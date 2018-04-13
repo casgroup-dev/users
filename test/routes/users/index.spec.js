@@ -4,7 +4,7 @@ require('dotenv').config()
 const chai = require('chai')
 const chaiHttp = require('chai-http')
 const app = require('../../../app')
-const {Company, User} = require('../../../models')
+const {Company} = require('../../../models')
 const mongoose = require('../../../services/mongo')
 const DatabaseCleaner = require('database-cleaner')
 
@@ -33,6 +33,7 @@ describe('USERS', () => {
       })
       .catch(err => console.log(err))
   })
+
   it('Should create a user and then get his info', done => {
     createUser()
       .then(res => {
@@ -46,6 +47,37 @@ describe('USERS', () => {
       })
       .catch(err => console.log(err))
   })
+
+  it('Should create and remove a user', done => {
+    createUser()
+      .then(res => {
+        return chai.request(app)
+          .delete(`/users/${res.body.email}`)
+      })
+      .then(res => {
+        res.body.should.have.property('message')
+        res.status.should.be.equal(200)
+        console.log(res.body)
+        done()
+      })
+  })
+
+  it('Should create a user and edit him', done => {
+    const secondEmail = 'second@email.com'
+    createUser()
+      .then(res => {
+        return chai.request(app)
+          .put(`/users/${res.body.email}`)
+          .send({email: secondEmail})
+      })
+      .then(res => {
+        res.body.email.should.be.equal(secondEmail)
+        console.log(res.body)
+        done()
+      })
+      .catch(err => console.log(err))
+  })
+
   it('Should return an error when the email does not exist in the DB', done => {
     chai.request(app)
       .get('/users/notanemail@email.com')
@@ -53,6 +85,7 @@ describe('USERS', () => {
         console.log(res.body)
         done()
       })
+
   })
 })
 

@@ -18,8 +18,27 @@ function create (req, res, next) {
     .catch(err => next(err))
 }
 
+/**
+ * Update the data of the user by its name.
+ * @param {Object} req
+ * @param {Object} res
+ * @param {Function} next
+ */
 function update (req, res, next) {
-  // TODO
+  User.findOne({email: req.params.email})
+    .then(user => {
+      user.set(req.body)
+      return user.save()
+    })
+    .then(user => getCleanAndPopulatedUser(user.email))
+    .then(user => {
+      req.body = user
+      return next()
+    })
+    .catch(err => {
+      logger.error(err)
+      return next(err)
+    })
 }
 
 function get (req, res, next) {
@@ -31,8 +50,24 @@ function get (req, res, next) {
     .catch(err => next(err))
 }
 
+/**
+ * Remove an user by its email.
+ * @param {Object} req
+ * @param {Object} res
+ * @param {Function} next
+ */
 function remove (req, res, next) {
-  // TODO
+  User.remove({email: req.params.email})
+    .then(() => {
+      req.body = {message: 'Success.'}
+      return next()
+    })
+    .catch(err => {
+      logger.error(err)
+      err = new Error('Error while removing the company instance.')
+      err.status = 500
+      return next(err)
+    })
 }
 
 /**

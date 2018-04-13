@@ -15,9 +15,14 @@ router.get('/:email',
 )
 
 /* Edit user using PUT method */
-router.put('/:id',
-  input.validate.edition,
+router.put('/:email',
   users.update,
+  result.send
+)
+
+/* Remove an user with the DELETE method */
+router.delete('/:email',
+  users.remove,
   result.send
 )
 
