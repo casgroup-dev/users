@@ -12,7 +12,7 @@ const roles = {admin: 'admin', proveedor: 'proveedor', consultor: 'consultor', c
  */
 const companySchema = mongoose.Schema({
   name: {type: String, required: true, unique: true, index: true},
-  industry: {type: String, required: true, index: true},
+  industry: [{type: String, required: true, index: true}],
   users: [{type: mongoose.Schema.Types.ObjectId, ref: UserModelName}]
 })
 companySchema.index({'$**': 'text'})
