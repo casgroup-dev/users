@@ -18,47 +18,38 @@ chai.should()
  * together they have problems.
  */
 
-afterEach(() => databaseCleaner.clean(mongoose.connections[0].db, function () {
-  console.log('DB cleaned successfully.')
-}))
-
 describe('User model', () => {
-  const company = new Company({name: 'Microsoft', industry: 'TI'})
+  const companyData = {name: 'Microsoft', industry: 'TI'}
+
+  afterEach(done => databaseCleaner.clean(mongoose.connections[0].db, function () {
+    console.log('DB cleaned successfully.')
+    done()
+  }))
   it('Should create a Company', done => {
+    let company = new Company(companyData)
     company.save()
       .then(() => Company.findOne({name: company.name}))
       .then(company => company.remove())
       .then(() => Company.findOne({name: company.name}))
       .then(company => chai.expect(company).to.not.exist)
       .then(() => done())
-      .catch(err => {
-        console.log(err)
-        chai.expect(err).to.not.exist
-      })
   })
   it('Should create a user and add it its company', done => {
     const email = 'email@email.com'
+    let company = new Company(companyData)
     company.save()
-      .then(company => {
-        const user = new User({
-          email: email,
-          company: company._id,
-          role: 'consultor1',
-          password: 'gfbfgbgsbd',
-          name: 'Tomás Perry'
-        })
-        return user.save()
-      })
+      .then(company => new User({
+        email: email,
+        company: company._id,
+        role: 'proveedor',
+        password: 'gfbfgbgsbd',
+        name: 'Tomás Perry'
+      }).save())
       .then(() => User.findOne({company: company._id}).populate('company'))
       .then(user => {
-        user.should.exist
         user.company.name.should.be.equal(company.name)
         user.remove()
         done()
-      })
-      .catch(err => {
-        console.log(err)
-        chai.expect(err).to.not.exist
       })
   })
   it('Should return an error when the input is not valid', done => {

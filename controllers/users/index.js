@@ -4,6 +4,7 @@ const logger = require('winston-namespace')('users')
 const {User} = require('../../models')
 
 const saltRounds = 10
+const hashPassword = password => bcrypt.hashSync(password, saltRounds)
 
 const input = {
   validate: {
@@ -20,20 +21,17 @@ const input = {
         err.status = 400
         return next(err)
       } else {
-        bcrypt.hash(req.body.password, saltRounds)
-          .then(hash => {
-            req.body.password = hash
-            const user = new User(req.body)
-            user.validate()
-              .then(() => {
-                req.body = {user}
-                next()
-              })
-              .catch(err => {
-                err.status = 400
-                logger.error(err)
-                return next(err)
-              })
+        req.body.password = hashPassword(req.body.password)
+        const user = new User(req.body)
+        user.validate()
+          .then(() => {
+            req.body = {user}
+            next()
+          })
+          .catch(err => {
+            err.status = 400
+            logger.error(err)
+            return next(err)
           })
       }
     },
@@ -74,5 +72,6 @@ const result = {
 module.exports = {
   input,
   users,
-  result
+  result,
+  hashPassword
 }

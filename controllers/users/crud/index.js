@@ -33,15 +33,22 @@ function update (req, res, next) {
       user.set(req.body)
       return user.save()
     })
+    .then(user => {
+      /* If set the company, update company's users */
+      if (req.body.company) {
+        Company.findOne({_id: user.company}).then(company => {
+          company.users.push(user)
+          company.save()
+        })
+      }
+      return user
+    })
     .then(user => getCleanAndPopulatedUser(user.email))
     .then(user => {
       req.body = user
       return next()
     })
-    .catch(err => {
-      logger.error(err)
-      return next(err)
-    })
+    .catch(err => next(err))
 }
 
 function get (req, res, next) {
@@ -79,7 +86,7 @@ function remove (req, res, next) {
  * @private
  */
 function getCleanAndPopulatedUser (email) {
-  return User.findOne({email}).populate('company', 'name industry').exec()
+  return User.findOne({email}).populate('company', 'name industry -_id').exec()
     .then(user => {
       if (!user) {
         const err = new Error(`No user with email '${email}'.`)
@@ -88,10 +95,7 @@ function getCleanAndPopulatedUser (email) {
       }
       return {
         email: user.email,
-        company: {
-          name: user.company.name,
-          industry: user.company.industry
-        },
+        company: user.company,
         role: user.role,
         name: user.name
       }
