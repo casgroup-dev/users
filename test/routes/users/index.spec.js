@@ -33,6 +33,7 @@ describe('USERS', () => {
       })
       .catch(err => console.log(err))
   })
+
   it('Should create a user and then get his info', done => {
     createUser()
       .then(res => {
@@ -46,6 +47,7 @@ describe('USERS', () => {
       })
       .catch(err => console.log(err))
   })
+
   it('Should create and remove a user', done => {
     createUser()
       .then(res => {
@@ -59,6 +61,7 @@ describe('USERS', () => {
         done()
       })
   })
+
   it('Should create a user and edit him', done => {
     const secondEmail = 'second@email.com'
     createUser()
@@ -73,6 +76,16 @@ describe('USERS', () => {
         done()
       })
       .catch(err => console.log(err))
+  })
+
+  it('Should return an error when the email does not exist in the DB', done => {
+    chai.request(app)
+      .get('/users/notanemail@email.com')
+      .then(res => {
+        console.log(res.body)
+        done()
+      })
+
   })
 })
 
