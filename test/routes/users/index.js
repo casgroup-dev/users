@@ -46,6 +46,14 @@ describe('USERS', () => {
       })
       .catch(err => console.log(err))
   })
+  it('Should return an error when the email does not exist in the DB', done => {
+    chai.request(app)
+      .get('/users/notanemail@email.com')
+      .then(res => {
+        console.log(res.body)
+        done()
+      })
+  })
 })
 
 /**
