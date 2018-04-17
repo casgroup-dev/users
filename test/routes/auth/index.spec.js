@@ -5,7 +5,7 @@ const chaiHttp = require('chai-http')
 const app = require('../../../app')
 const mongoose = require('../../../services/mongo')
 const DatabaseCleaner = require('database-cleaner')
-const {createUser, userPassword} = require('../users')
+const {createUser, userPassword} = require('../users/index.spec')
 
 chai.use(chaiHttp)
 chai.should()
