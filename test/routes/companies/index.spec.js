@@ -13,7 +13,15 @@ chai.use(chaiHttp)
 chai.should()
 const databaseCleaner = new DatabaseCleaner('mongodb')
 
-const validCompany = {name: 'Microsoft Corporates INC', industry: 'TI'}
+const validCompany = {
+  business_name: 'Microsoft Corporates INC',
+  fantasy_name: 'Microsoft',
+  rut: '111111111',
+  industries: ['TI', 'World Domain'],
+  legal_representative: 'Bill Gates',
+  legal_rep_email: 'billy@outlook.com'
+}
+
 const userData = {
   email: 'example@email.com',
   name: 'Fabián Souto',
@@ -28,7 +36,7 @@ describe('COMPANIES', () => {
   }))
   it('Should get an error if the input for creation is bad', done => {
     createUserAndGetToken(roles.admin)
-      .then(token => chai.request(app).post(`/companies?token=${token}`).send({name: 'Microsoft'}))
+      .then(token => chai.request(app).post(`/companies?token=${token}`).send({business_name: 'Microsoft'}))
       .then(res => {
         res.body.should.have.property('error')
         res.body.error.status.should.be.equal(400)
@@ -52,13 +60,25 @@ describe('COMPANIES', () => {
       .then(done)
   })
   it('Should create a company and get it', done => {
-    const company = {name: 'Facebook', industry: 'TI'}
+    const company = {
+      business_name: 'Facebook Social Media',
+      fantasy_name: 'Facebook',
+      rut: '666666666',
+      industries: ['TI', 'Mind Control'],
+      legal_representative: 'Bill Gates',
+      legal_rep_email: 'billy@outlook.com'
+    }
+
     const validateCompany = body => {
-      body.should.have.property('name')
-      body.should.have.property('industry')
+      body.should.have.property('business_name')
+      body.should.have.property('fantasy_name')
+      body.should.have.property('rut')
+      body.should.have.property('industries')
+      body.should.have.property('legal_representative')
+      body.should.have.property('legal_rep_email')
       body.should.have.property('users')
-      body.name.should.be.equal(company.name)
-      body.industry.should.be.equal(company.industry)
+      body.business_name.should.be.equal(company.business_name)
+      body.industries.should.be.equal(company.industries)
     }
     let token
     createUserAndGetToken(roles.admin)
@@ -69,7 +89,7 @@ describe('COMPANIES', () => {
       .then(res => {
         validateCompany(res.body)
         return chai.request(app)
-          .get(`/companies/${res.body.name}?token=${token}`)
+          .get(`/companies/${res.body.business_name}?token=${token}`)
       })
       .then(res => {
         validateCompany(res.body)
@@ -81,7 +101,7 @@ describe('COMPANIES', () => {
     createUserAndGetToken()
       .then(token => {
         chai.request(app)
-          .delete(`/companies/${validCompany.name}?token=${token}`)
+          .delete(`/companies/${validCompany.business_name}?token=${token}`)
           .then(res => {
             res.status.should.be.equal(200)
             console.log(res.body)
@@ -94,11 +114,11 @@ describe('COMPANIES', () => {
     createUserAndGetToken(roles.admin)
       .then(token => {
         return chai.request(app)
-          .put(`/companies/${validCompany.name}?token=${token}`)
-          .send({name: 'Apple'})
+          .put(`/companies/${validCompany.business_name}?token=${token}`)
+          .send({business_name: 'Apple'})
       })
       .then(res => {
-        res.body.name.should.be.equal('Apple')
+        res.body.business_name.should.be.equal('Apple')
         res.body.users[0].email.should.be.equal(userData.email)
         done()
       })
