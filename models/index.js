@@ -2,6 +2,7 @@ const mongoose = require('../services/mongo')
 require('mongoose-type-email')
 
 const UserModelName = 'User'
+const ShadowUserModelName = 'ShadowUser'
 const CompanyModelName = 'Company'
 const roles = {admin: 'admin', proveedor: 'proveedor', consultor: 'consultor', cliente: 'cliente'}
 
@@ -42,6 +43,18 @@ const User = mongoose.model(UserModelName, mongoose.Schema({
 }))
 
 /**
+ * Shadow User, to hold an invitated company with an email, until it registers and
+ * becomes a normal user.
+ * @type {Model}
+ */
+const ShadowUser = mongoose.model(ShadowUserModelName, mongoose.Schema({
+  email: {type: mongoose.SchemaTypes.Email, required: true, unique: true},
+  business_name: {type: String, required: false},
+  phone: {type: String, required: false},
+  name: {type: String, required: false}
+}))
+
+/**
  * Token model to store valid tokens.
  * @type {Model}
  */
@@ -54,5 +67,6 @@ module.exports = {
   Company,
   Token,
   User,
+  ShadowUser,
   roles
 }
