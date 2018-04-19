@@ -39,8 +39,10 @@ describe('SHADOW USERS', () => {
     createUserAndGetToken(roles.admin)
       .then(createShadowUser)
       .then(() => chai.request(app).get(`/shadow/users/${email}`))
-      .then(validateResponse)
-      .then(done)
+      .then(res => {
+        res.body.should.have.property('token')
+        done()
+      })
   })
 })
 
