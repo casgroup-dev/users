@@ -1,5 +1,4 @@
-const jwt = require('jsonwebtoken')
-const auth = require('../auth')
+const logger = require('winston-namespace')('utils')
 
 const format = {
   /**
@@ -17,29 +16,28 @@ const format = {
   }
 }
 
-const validateToken = {
+const result = {
   /**
-   * Given a role, validates the token and give to the client the permissions to continue.
-   * @param {Array<String>} roles
-   * @returns {Array<Function>}
+   * The middleware change the request's body, transforming it until it has the json that we
+   * need to send to the client.
+   * @param {Object} req - Request object.
+   * @param {Object} res - Response object.
+   * @param {Function} next - Next function, useful to call the next middleware.
    */
-  createMiddleware: roles => {
-    return [
-      auth.users.token.validate,
-      (req, res, next) => {
-        const tokenData = jwt.verify(req.options.token, process.env.JWT_SECRET)
-        if (roles.indexOf(tokenData.role) === -1) {
-          const err = new Error('Not authorized.')
-          err.status = 403
-          return next(err)
-        }
-        return next()
-      }
-    ]
+  send: (req, res, next) => {
+    if (!req.body) {
+      const err = new Error('There is no body to send to the client.')
+      err.status = 500
+      logger.error(err)
+      // Not send this message to the client, set to null and the error middleware will put default message.
+      err.message = null
+      return next(err)
+    }
+    res.json(req.body)
   }
 }
 
 module.exports = {
   format,
-  validateToken
+  result
 }

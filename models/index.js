@@ -4,30 +4,32 @@ require('mongoose-type-email')
 const UserModelName = 'User'
 const ShadowUserModelName = 'ShadowUser'
 const CompanyModelName = 'Company'
-const roles = {admin: 'admin', proveedor: 'proveedor', consultor: 'consultor', cliente: 'cliente'}
+/* The user can be an admin of the system, does not confuse this role with the role of the user in a billing */
+const roles = {admin: 'admin', user: 'user', companyAdmin: 'companyAdmin'}
 
+/* Company schema */
+const companySchema = mongoose.Schema({
+  businessName: {type: String, required: true, unique: true, index: true},
+  fantasyName: {type: String, required: true, unique: true, index: true},
+  rut: {type: Number, required: true, unique: true}, // TODO: RUT must be validated
+  industries: [{type: String, required: true, index: true}],
+  legalRepresentative: {type: String, required: true},
+  legalRepEmail: {type: mongoose.SchemaTypes.Email, required: true},
+  legalRepPhone: {type: Number}, // TODO: phone must be validated
+  users: [{type: mongoose.Schema.Types.ObjectId, ref: UserModelName}]
+})
+companySchema.index({'$**': 'text'})
 /**
  * Company model, it has an array of users' ids that must be populated to get it.
  * See: http://mongoosejs.com/docs/populate.html
  * @type {Model}
  */
-const companySchema = mongoose.Schema({
-  business_name: {type: String, required: true, unique: true, index: true},
-  fantasy_name: {type: String, required: true, unique: true, index: true},
-  rut: {type: Number, required: true, unique: true}, // TODO: RUT must be validated
-  industries: [{type: String, required: true, index: true}],
-  legal_representative: {type: String, required: true},
-  legal_rep_email: {type: mongoose.SchemaTypes.Email, required: true},
-  legal_rep_phone: {type: Number}, // TODO: phone must be validated
-  users: [{type: mongoose.Schema.Types.ObjectId, ref: UserModelName}]
-})
-companySchema.index({'$**': 'text'})
 const Company = mongoose.model(CompanyModelName, companySchema)
 
 /**
  * User model, it has a company that is a reference the the Company model. To query this it must be populated.
  * See: http://mongoosejs.com/docs/populate.html
- * @type
+ * @type {Model}
  */
 const User = mongoose.model(UserModelName, mongoose.Schema({
   email: {type: mongoose.SchemaTypes.Email, required: true, unique: true},
@@ -35,6 +37,7 @@ const User = mongoose.model(UserModelName, mongoose.Schema({
   role: {
     type: String,
     required: true,
+    default: roles.user,
     enum: Object.values(roles)
   },
   password: {type: String, required: true},
@@ -49,7 +52,7 @@ const User = mongoose.model(UserModelName, mongoose.Schema({
  */
 const ShadowUser = mongoose.model(ShadowUserModelName, mongoose.Schema({
   email: {type: mongoose.SchemaTypes.Email, required: true, unique: true},
-  business_name: {type: String, required: false},
+  businessName: {type: String, required: false},
   phone: {type: String, required: false},
   name: {type: String, required: false}
 }))

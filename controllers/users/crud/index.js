@@ -86,7 +86,7 @@ function remove (req, res, next) {
  * @private
  */
 function getCleanAndPopulatedUser (email) {
-  return User.findOne({email}).populate('company', 'business_name industries -_id').exec()
+  return User.findOne({email}).populate('company', 'businessName industries -_id').exec()
     .then(user => {
       if (!user) {
         const err = new Error(`No user with email '${email}'.`)

@@ -3,7 +3,7 @@
 require('dotenv').config()
 
 const chai = require('chai')
-const {Company, User} = require('../../models')
+const {Company, User, roles} = require('../../models')
 const mongoose = require('../../services/mongo')
 const DatabaseCleaner = require('database-cleaner')
 
@@ -20,12 +20,12 @@ chai.should()
 
 describe('User model', () => {
   const companyData = {
-    business_name: 'Microsoft Corporates INC',
-    fantasy_name: 'Microsoft',
+    businessName: 'Microsoft Corporates INC',
+    fantasyName: 'Microsoft',
     rut: '111111111',
     industries: ['TI', 'World Domain'],
-    legal_representative: 'Bill Gates',
-    legal_rep_email: 'billy@outlook.com'
+    legalRepresentative: 'Bill Gates',
+    legalRepEmail: 'billy@outlook.com'
   }
 
   afterEach(done => databaseCleaner.clean(mongoose.connections[0].db, function () {
@@ -35,9 +35,9 @@ describe('User model', () => {
   it('Should create a Company', done => {
     let company = new Company(companyData)
     company.save()
-      .then(() => Company.findOne({business_name: company.business_name}))
+      .then(() => Company.findOne({businessName: company.businessName}))
       .then(company => company.remove())
-      .then(() => Company.findOne({business_name: company.business_name}))
+      .then(() => Company.findOne({businessName: company.businessName}))
       .then(company => chai.expect(company).to.not.exist)
       .then(() => done())
   })
@@ -48,19 +48,19 @@ describe('User model', () => {
       .then(company => new User({
         email: email,
         company: company._id,
-        role: 'proveedor',
+        role: roles.user,
         password: 'gfbfgbgsbd',
         name: 'Tomás Perry'
       }).save())
       .then(() => User.findOne({company: company._id}).populate('company'))
       .then(user => {
-        user.company.business_name.should.be.equal(company.business_name)
+        user.company.businessName.should.be.equal(company.businessName)
         user.remove()
         done()
       })
   })
   it('Should return an error when the input is not valid', done => {
-    const company = new Company({business_name: 'name'})
+    const company = new Company({businessName: 'name'})
     company.validate()
       .catch(err => {
         console.log(err.message)

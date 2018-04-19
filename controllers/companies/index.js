@@ -1,6 +1,5 @@
 const companies = require('./crud')
 const {Company} = require('../../models')
-const {result} = require('../users')
 const logger = require('winston-namespace')('companies')
 
 const input = {
@@ -29,6 +28,5 @@ const input = {
 
 module.exports = {
   input,
-  companies,
-  result
+  companies
 }

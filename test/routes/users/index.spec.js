@@ -5,9 +5,10 @@ const chai = require('chai')
 const chaiHttp = require('chai-http')
 const DatabaseCleaner = require('database-cleaner')
 const app = require('../../../app')
-const {Company, User} = require('../../../models')
+const {Company, User, roles} = require('../../../models')
 const mongoose = require('../../../services/mongo')
 const {hashPassword} = require('../../../controllers/users')
+const {validCompany} = require('../companies/index.spec')
 
 chai.use(chaiHttp)
 chai.should()
@@ -28,7 +29,6 @@ describe('USERS', () => {
       })
       .catch(err => console.log(err))
   })
-
   it('Should create a user and then get his info', done => {
     createUser()
       .then(({res, adminToken}) => {
@@ -40,7 +40,6 @@ describe('USERS', () => {
       .then(done)
       .catch(err => console.log(err))
   })
-
   it('Should create and remove a user', done => {
     createUser()
       .then(({res, adminToken}) => {
@@ -54,7 +53,6 @@ describe('USERS', () => {
         done()
       })
   })
-
   it('Should create a user and edit him', done => {
     const secondEmail = 'second@email.com'
     createUser()
@@ -70,7 +68,6 @@ describe('USERS', () => {
       })
       .catch(err => console.log(err))
   })
-
   it('Should not perform anything without a token', done => {
     const validateError = res => {
       res.should.have.property('error')
@@ -87,7 +84,6 @@ describe('USERS', () => {
       .then(validateError)
       .then(done)
   })
-
   it('Should return an error when the email does not exist in the DB', done => {
     chai.request(app)
       .get('/users/notanemail@email.com')
@@ -96,7 +92,6 @@ describe('USERS', () => {
         done()
       })
   })
-
 })
 
 /**
@@ -104,7 +99,6 @@ describe('USERS', () => {
  * @returns {PromiseLike}
  */
 function createUser () {
-  const companyData = {name: 'Microsoft', industry: 'TI'}
   const adminPassword = 'mypassword'
   const adminData = {
     name: 'Admin Name',
@@ -114,7 +108,7 @@ function createUser () {
   }
   /* Create company to test adding a user */
   let company
-  return new Company(companyData).save()
+  return new Company(validCompany).save()
   /* Add admin to get a token */
     .then(newCompany => {
       company = newCompany
@@ -135,7 +129,7 @@ function createUser () {
         .send({
           email: 'example@microsoft.com',
           company: company._id,
-          role: 'proveedor',
+          role: roles.user,
           password: userPassword,
           name: 'Felipe Gonzales'
         })
@@ -149,8 +143,8 @@ function validateUser (res) {
   res.body.should.have.property('email')
   res.body.should.have.property('role')
   res.body.should.have.property('company')
-  res.body.company.should.have.property('name')
-  res.body.company.should.have.property('industry')
+  res.body.company.should.have.property('businessName')
+  res.body.company.should.have.property('industries')
 }
 
 module.exports = {
