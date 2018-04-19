@@ -5,7 +5,7 @@ const chai = require('chai')
 const chaiHttp = require('chai-http')
 const DatabaseCleaner = require('database-cleaner')
 const app = require('../../../app')
-const {Company, User} = require('../../../models')
+const {Company, User, roles} = require('../../../models')
 const mongoose = require('../../../services/mongo')
 const {hashPassword} = require('../../../controllers/users')
 
@@ -135,7 +135,7 @@ function createUser () {
         .send({
           email: 'example@microsoft.com',
           company: company._id,
-          role: 'proveedor',
+          role: roles.user,
           password: userPassword,
           name: 'Felipe Gonzales'
         })

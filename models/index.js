@@ -3,25 +3,27 @@ require('mongoose-type-email')
 
 const UserModelName = 'User'
 const CompanyModelName = 'Company'
-const roles = {admin: 'admin', proveedor: 'proveedor', consultor: 'consultor', cliente: 'cliente'}
+/* The user can be an admin of the system, does not confuse this role with the role of the user in a billing */
+const roles = {admin: 'admin', user: 'user', companyAdmin: 'companyAdmin'}
 
-/**
- * Company model, it has an array of users' ids that must be populated to get it.
- * See: http://mongoosejs.com/docs/populate.html
- * @type {Model}
- */
+/* Company schema */
 const companySchema = mongoose.Schema({
   name: {type: String, required: true, unique: true, index: true},
   industry: {type: String, required: true, index: true},
   users: [{type: mongoose.Schema.Types.ObjectId, ref: UserModelName}]
 })
 companySchema.index({'$**': 'text'})
+/**
+ * Company model, it has an array of users' ids that must be populated to get it.
+ * See: http://mongoosejs.com/docs/populate.html
+ * @type {Model}
+ */
 const Company = mongoose.model(CompanyModelName, companySchema)
 
 /**
  * User model, it has a company that is a reference the the Company model. To query this it must be populated.
  * See: http://mongoosejs.com/docs/populate.html
- * @type
+ * @type {Model}
  */
 const User = mongoose.model(UserModelName, mongoose.Schema({
   email: {type: mongoose.SchemaTypes.Email, required: true, unique: true},
@@ -29,6 +31,7 @@ const User = mongoose.model(UserModelName, mongoose.Schema({
   role: {
     type: String,
     required: true,
+    default: roles.user,
     enum: Object.values(roles)
   },
   password: {type: String, required: true},
