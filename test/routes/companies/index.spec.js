@@ -188,5 +188,6 @@ function createUserAndGetToken (role) {
 }
 
 module.exports = {
-  validCompany
+  validCompany,
+  createUserAndGetToken
 }

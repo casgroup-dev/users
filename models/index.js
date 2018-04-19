@@ -52,9 +52,9 @@ const User = mongoose.model(UserModelName, mongoose.Schema({
  */
 const ShadowUser = mongoose.model(ShadowUserModelName, mongoose.Schema({
   email: {type: mongoose.SchemaTypes.Email, required: true, unique: true},
-  businessName: {type: String, required: false},
-  phone: {type: String, required: false},
-  name: {type: String, required: false}
+  businessName: {type: String},
+  phone: {type: String},
+  name: {type: String}
 }))
 
 /**
