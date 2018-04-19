@@ -16,6 +16,7 @@ router.post('/',
 /* Get information of the user using GET method */
 router.get('/:email',
   get,
+  token.create,
   result.send
 )
 

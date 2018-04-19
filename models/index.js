@@ -5,7 +5,7 @@ const UserModelName = 'User'
 const ShadowUserModelName = 'ShadowUser'
 const CompanyModelName = 'Company'
 /* The user can be an admin of the system, does not confuse this role with the role of the user in a billing */
-const roles = {admin: 'admin', user: 'user', companyAdmin: 'companyAdmin'}
+const roles = {admin: 'admin', companyAdmin: 'companyAdmin', user: 'user', shadowUser: 'shadowUser'}
 
 /* Company schema */
 const companySchema = mongoose.Schema({

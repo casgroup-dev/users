@@ -1,4 +1,4 @@
-const {ShadowUser} = require('../../../models')
+const {ShadowUser, roles} = require('../../../models')
 const logger = require('winston-namespace')('users:shadow')
 
 function validateInput (req, res, next) {
@@ -15,7 +15,12 @@ function validateInput (req, res, next) {
 
 function create (req, res, next) {
   req.body.shadowUser.save().then(shadowUser => {
-    req.body = clean(shadowUser)
+    req.body = {
+      email: shadowUser.email,
+      businessName: shadowUser.businessName,
+      phone: shadowUser.phone,
+      name: shadowUser.name
+    }
     return next()
   }).catch(err => {
     logger.error(err)
@@ -25,11 +30,18 @@ function create (req, res, next) {
   })
 }
 
+/**
+ * Get the shadow user by an email in the params (path) and set the body to his email and the shadowUser role.
+ * @param {Object} req
+ * @param {Object} res
+ * @param {Function} next
+ */
 function get (req, res, next) {
   ShadowUser.findOne({email: req.params.email})
     .then(shadowUser => {
       if (shadowUser) {
-        req.body = clean(shadowUser)
+        /* Set to user to use the token.create middleware that uses this property of the body to create the token, see routes/shadow */
+        req.body.user = {email: shadowUser.email, role: roles.shadowUser}
         return next()
       }
       const err = new Error(`There is no user with email ${req.params.email}`)
@@ -42,15 +54,6 @@ function get (req, res, next) {
       err.status = 500
       return next(err)
     })
-}
-
-function clean (shadowUser) {
-  return {
-    email: shadowUser.email,
-    businessName: shadowUser.businessName,
-    phone: shadowUser.phone,
-    name: shadowUser.name
-  }
 }
 
 module.exports = {

@@ -7,7 +7,7 @@ const {roles} = require('../../models')
 /* Creation of a company using POST method */
 router.post('/',
   token.validate,
-  token.validate.roles([roles.admin]),
+  token.validate.roles([roles.admin, roles.shadowUser]), // Admins and shadow users (authorized by the admin) can create companies
   input.validate.creation,
   companies.create,
   result.send

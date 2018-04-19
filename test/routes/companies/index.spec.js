@@ -66,25 +66,14 @@ describe('COMPANIES', () => {
       legalRepresentative: 'Bill Gates',
       legalRepEmail: 'billy@outlook.com'
     }
-    const validateCompany = body => {
-      body.should.have.property('businessName')
-      body.should.have.property('fantasyName')
-      body.should.have.property('rut')
-      body.should.have.property('industries')
-      body.should.have.property('legalRepresentative')
-      body.should.have.property('legalRepEmail')
-      body.should.have.property('users')
-      body.businessName.should.be.equal(company.businessName)
-      body.industries.should.be.deep.equal(company.industries)
-    }
     createUserAndGetToken(roles.admin)
       .then(token => chai.request(app).post(`/companies?token=${token}`).send(company).then(res => {
-        validateCompany(res.body)
+        validateCompany(res.body, company)
         return chai.request(app).get(`/companies/${res.body.businessName}?token=${token}`)
       }))
       .then(res => {
         console.log(res.body)
-        validateCompany(res.body)
+        validateCompany(res.body, company)
         done()
       })
       .catch(err => console.log(err))
@@ -163,7 +152,28 @@ describe('COMPANIES', () => {
         done()
       })
   })
+  it('A shadow user has the power to create a company', done => {
+    createUserAndGetToken(roles.shadowUser)
+      .then(token => chai.request(app).post(`/companies?token=${token}`).send(validCompany))
+      .then(res => {
+        console.log(res.body)
+        validateCompany(res.body, validCompany)
+        done()
+      })
+  })
 })
+
+function validateCompany (body, company) {
+  body.should.have.property('businessName')
+  body.should.have.property('fantasyName')
+  body.should.have.property('rut')
+  body.should.have.property('industries')
+  body.should.have.property('legalRepresentative')
+  body.should.have.property('legalRepEmail')
+  body.should.have.property('users')
+  body.businessName.should.be.equal(company.businessName)
+  body.industries.should.be.deep.equal(company.industries)
+}
 
 function createUserAndGetToken (role) {
   return new Company(validCompany).save().then(company => {
