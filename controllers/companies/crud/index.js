@@ -34,7 +34,7 @@ function get (req, res, next) {
   Company.findOne({businessName: req.params.businessName}).populate('users', usersPopulateFields)
     .then(company => {
       if (!company) {
-        const err = new Error(`There is no company with business name '${req.params.businesNname}'.`)
+        const err = new Error(`There is no company with business name '${req.params.businessName}'.`)
         err.status = 400
         throw err
       }
