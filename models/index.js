@@ -2,14 +2,20 @@ const mongoose = require('../services/mongo')
 require('mongoose-type-email')
 
 const UserModelName = 'User'
+const ShadowUserModelName = 'ShadowUser'
 const CompanyModelName = 'Company'
 /* The user can be an admin of the system, does not confuse this role with the role of the user in a billing */
-const roles = {admin: 'admin', user: 'user', companyAdmin: 'companyAdmin'}
+const roles = {admin: 'admin', companyAdmin: 'companyAdmin', user: 'user', shadowUser: 'shadowUser'}
 
 /* Company schema */
 const companySchema = mongoose.Schema({
-  name: {type: String, required: true, unique: true, index: true},
-  industry: {type: String, required: true, index: true},
+  businessName: {type: String, required: true, unique: true, index: true},
+  fantasyName: {type: String, required: true, unique: true, index: true},
+  rut: {type: Number, required: true, unique: true}, // TODO: RUT must be validated
+  industries: [{type: String, required: true, index: true}],
+  legalRepresentative: {type: String, required: true},
+  legalRepEmail: {type: mongoose.SchemaTypes.Email, required: true},
+  legalRepPhone: {type: Number}, // TODO: phone must be validated
   users: [{type: mongoose.Schema.Types.ObjectId, ref: UserModelName}]
 })
 companySchema.index({'$**': 'text'})
@@ -40,6 +46,18 @@ const User = mongoose.model(UserModelName, mongoose.Schema({
 }))
 
 /**
+ * Shadow User, to hold an invitated company with an email, until it registers and
+ * becomes a normal user.
+ * @type {Model}
+ */
+const ShadowUser = mongoose.model(ShadowUserModelName, mongoose.Schema({
+  email: {type: mongoose.SchemaTypes.Email, required: true, unique: true},
+  businessName: {type: String},
+  phone: {type: String},
+  name: {type: String}
+}))
+
+/**
  * Token model to store valid tokens.
  * @type {Model}
  */
@@ -52,5 +70,6 @@ module.exports = {
   Company,
   Token,
   User,
+  ShadowUser,
   roles
 }

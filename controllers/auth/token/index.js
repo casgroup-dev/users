@@ -70,13 +70,13 @@ validate.roles = roles => {
 
 /**
  * Validates that the company of the token is the same that the user is requesting info for.
- * The id of the company must comes in the path (as params of the request).
+ * The business name of the company must comes in the path (as params of the request).
  * @returns {Function}
  */
 validate.company = (req, res, next) => {
   getData(req.options.token).then(tokenData => {
     if (tokenData.role === roles.admin) return next()
-    if (tokenData.company._id !== req.params.id) {
+    if (tokenData.company.businessName !== req.params.businessName) {
       return handleError(new Error('Requesting a company that is not of the user.'), res, next)
     }
     return next()

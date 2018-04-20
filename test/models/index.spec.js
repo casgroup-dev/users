@@ -19,7 +19,14 @@ chai.should()
  */
 
 describe('User model', () => {
-  const companyData = {name: 'Microsoft', industry: 'TI'}
+  const companyData = {
+    businessName: 'Microsoft Corporates INC',
+    fantasyName: 'Microsoft',
+    rut: '111111111',
+    industries: ['TI', 'World Domain'],
+    legalRepresentative: 'Bill Gates',
+    legalRepEmail: 'billy@outlook.com'
+  }
 
   afterEach(done => databaseCleaner.clean(mongoose.connections[0].db, function () {
     console.log('DB cleaned successfully.')
@@ -28,9 +35,9 @@ describe('User model', () => {
   it('Should create a Company', done => {
     let company = new Company(companyData)
     company.save()
-      .then(() => Company.findOne({name: company.name}))
+      .then(() => Company.findOne({businessName: company.businessName}))
       .then(company => company.remove())
-      .then(() => Company.findOne({name: company.name}))
+      .then(() => Company.findOne({businessName: company.businessName}))
       .then(company => chai.expect(company).to.not.exist)
       .then(() => done())
   })
@@ -47,13 +54,13 @@ describe('User model', () => {
       }).save())
       .then(() => User.findOne({company: company._id}).populate('company'))
       .then(user => {
-        user.company.name.should.be.equal(company.name)
+        user.company.businessName.should.be.equal(company.businessName)
         user.remove()
         done()
       })
   })
   it('Should return an error when the input is not valid', done => {
-    const company = new Company({name: 'name'})
+    const company = new Company({businessName: 'name'})
     company.validate()
       .catch(err => {
         console.log(err.message)

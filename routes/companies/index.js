@@ -7,7 +7,7 @@ const {roles} = require('../../models')
 /* Creation of a company using POST method */
 router.post('/',
   token.validate,
-  token.validate.roles([roles.admin]),
+  token.validate.roles([roles.admin, roles.shadowUser]), // Admins and shadow users (authorized by the admin) can create companies
   input.validate.creation,
   companies.create,
   result.send
@@ -22,7 +22,7 @@ router.get('/', [
 ])
 
 /* Get information of the company using GET method */
-router.get('/:id',
+router.get('/:businessName',
   token.validate,
   token.validate.roles([roles.admin, roles.companyAdmin]),
   token.validate.company,
@@ -31,7 +31,7 @@ router.get('/:id',
 )
 
 /* Edit company using PUT method */
-router.put('/:id',
+router.put('/:businessName',
   token.validate,
   token.validate.roles([roles.admin, roles.companyAdmin]),
   token.validate.company,
@@ -40,7 +40,7 @@ router.put('/:id',
 )
 
 /* Delete a company using DELETE method */
-router.delete('/:id',
+router.delete('/:businessName',
   token.validate,
   token.validate.roles([roles.admin]),
   companies.remove,
