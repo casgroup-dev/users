@@ -44,14 +44,16 @@ function get (req, res, next) {
         req.body.user = {email: shadowUser.email, role: roles.shadowUser}
         return next()
       }
-      const err = new Error(`There is no user with email ${req.params.email}`)
+      const err = new Error(`There is no shadow user with email ${req.params.email}`)
       err.status = 404
+      logger.warn(err)
       return next(err)
     })
     .catch(err => {
       logger.error(err)
       err = new Error('Internal server error while getting the shadow user.')
       err.status = 500
+      logger.warn(err)
       return next(err)
     })
 }
