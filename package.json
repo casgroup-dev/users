@@ -7,7 +7,9 @@
     "dev": "node -r dotenv/config ./bin/www",
     "test": "mocha --exit --recursive ./test/*",
     "createAdmin": "node -r dotenv/config ./scripts/createAdmin.js",
-    "listAdmins": "node -r dotenv/config ./scripts/listAdmins.js"
+    "listAdmins": "node -r dotenv/config ./scripts/listAdmins.js",
+    "addShadowUser": "node -r dotenv/config ./scripts/addShadowUser.js",
+    "removeShadowUsers": "node -r dotenv/config ./scripts/removeShadowUsers.js"
   },
   "dependencies": {
     "bcrypt": "^1.0.3",
