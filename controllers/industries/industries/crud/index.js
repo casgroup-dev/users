@@ -1,11 +1,15 @@
-const {IndustryCategory, Industry} = require('../../../models/index')
+const {Industry} = require('../../../../models/index')
 const logger = require('winston-namespace')('industries:crud')
 
-function get (req, res, next) {
+function getIndustry (req, res, next) {
   Industry.find({})
     .then(industries => {
-      console.log(industries)
-      res.send(industries)
+      if (!industries) {
+        const err = new Error('There are no industries.')
+        err.status = 400
+        throw err
+      }
+      else res.send(industries)
     })
     .catch(err => {
       logger.error(err)
@@ -15,10 +19,10 @@ function get (req, res, next) {
     })
 }
 
-get.name = function (req, res, next) {
+getIndustry.name = function (req, res, next) {
   console.log(req)
 }
 
 module.exports = {
-  get
+  getIndustry
 }
