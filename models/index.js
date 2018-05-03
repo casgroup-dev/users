@@ -99,7 +99,7 @@ const Bidding = mongoose.model(BiddingModelName, mongoose.Schema({
   }],
   // documents: [],
   bases: {type: String},
-  periods: [{type: Date}]
+  periods: [[{type: Date}]]
 }))
 
 module.exports = {
