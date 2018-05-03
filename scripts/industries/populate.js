@@ -1,10 +1,7 @@
 /**
  * This file reads a json file generated with industries_parser.py and populates database
  */
-
-require('dotenv').config({'path': '../.env'})
-const {Industry, IndustryCategory} = require('../models')
-
+const {Industry, IndustryCategory} = require('../../models/index')
 const file = require('./industries')
 
 file.map(function (industryCategory) {
