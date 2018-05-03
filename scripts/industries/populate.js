@@ -4,17 +4,20 @@
 const {Industry, IndustryCategory} = require('../../models/index')
 const file = require('./industries')
 
-file.map(function (industryCategory) {
-  const industryCategoryEntry = new IndustryCategory({'name': industryCategory['category']})
-  industryCategoryEntry.save()
-  industryCategory['industries'].map(function (industry) {
-    const industryEntry = new Industry({
-      'code': industry['code'],
-      'name': industry['name'],
-      'category': industryCategoryEntry.id
-    })
-    industryEntry.save()
+module.exports = () => {
+  /* Return a promise */
+  return new Promise(resolve => {
+    /* Wait for all industry category creation with promise.all() */
+    Promise.all(file.map(async industryCategory => {
+      const industryCategoryEntry = await new IndustryCategory({'name': industryCategory['category']}).save()
+      /* Wait for all */
+      return Promise.all(industryCategory['industries'].map(async industry => {
+        await new Industry({
+          'code': industry['code'],
+          'name': industry['name'],
+          'category': industryCategoryEntry.id
+        }).save()
+      }))
+    })).then(() => resolve())
   })
-})
-
-// console.log('Done')
+}

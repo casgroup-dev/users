@@ -10,7 +10,7 @@
     "listAdmins": "node -r dotenv/config ./scripts/listAdmins.js",
     "addShadowUser": "node -r dotenv/config ./scripts/addShadowUser.js",
     "removeShadowUsers": "node -r dotenv/config ./scripts/removeShadowUsers.js",
-    "populateIndustries": "node -r dotenv/config ./scripts/industries/populate.js"
+    "populateIndustries": "node -r dotenv/config ./scripts/industries/index.js"
   },
   "dependencies": {
     "bcrypt": "^1.0.3",
