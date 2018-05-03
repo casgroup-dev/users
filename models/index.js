@@ -98,6 +98,7 @@ const Bidding = mongoose.model(BiddingModelName, mongoose.Schema({
     userRole: {type: String}
   }],
   // documents: [],
+  bases: {type: String},
   periods: [{type: Date}]
 }))
 
