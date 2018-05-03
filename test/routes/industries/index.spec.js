@@ -18,7 +18,7 @@ chai.use(chaiHttp)
 chai.should()
 
 const databaseCleaner = new DatabaseCleaner('mongodb')
-const endpoint = '/industries'
+const endpoint = '/api/industries'
 
 describe('INDUSTRIES', () => {
   beforeEach(done => { populateIndustries().then(done) })

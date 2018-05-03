@@ -18,7 +18,7 @@ describe('AUTH', () => {
   }))
   it('Should return the error indicating that the email does not exists', done => {
     chai.request(app)
-      .post('/auth/login')
+      .post('/api/auth/login')
       .send({email: 'email@example.com', password: 'sdjksdhsad'})
       .then(res => {
         res.body.should.have.property('error')
@@ -30,7 +30,7 @@ describe('AUTH', () => {
     createUser()
       .then(({res}) => {
         return chai.request(app)
-          .post('/auth/login')
+          .post('/api/auth/login')
           .send({email: res.body.email, password: userPassword})
       })
       .then(res => {
@@ -43,7 +43,7 @@ describe('AUTH', () => {
     createUser()
       .then(({res}) => {
         return chai.request(app)
-          .post('/auth/login')
+          .post('/api/auth/login')
           .send({email: res.body.email, password: 'this is not the password'})
       })
       .then(res => {
@@ -56,13 +56,13 @@ describe('AUTH', () => {
     createUser()
       .then(({res}) => {
         return chai.request(app)
-          .post('/auth/login')
+          .post('/api/auth/login')
           .send({email: res.body.email, password: userPassword})
       })
       .then(res => {
         console.log(`Token: ${res.body.token}`)
         return chai.request(app)
-          .get(`/auth/${res.body.token}`)
+          .get(`/api/auth/${res.body.token}`)
       })
       .then(res => {
         res.status.should.be.equal(200)
@@ -73,7 +73,7 @@ describe('AUTH', () => {
   })
   it('Should return an error when the token is invalid', done => {
     chai.request(app)
-      .get('/auth/thisIsNotaToken')
+      .get('/api/auth/thisIsNotaToken')
       .then(res => {
         res.status.should.be.equal(403)
         res.body.should.have.property('error')
