@@ -94,7 +94,7 @@ const Bidding = mongoose.model(BiddingModelName, mongoose.Schema({
   name: {type: String, required: true, unique: true},
   company: {type: String, required: true},
   users: [{
-    userId: {type: String},
+    username: {type: String},
     userRole: {type: String}
   }],
   // documents: [],
