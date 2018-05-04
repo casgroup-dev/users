@@ -16,10 +16,10 @@ const databaseCleaner = new DatabaseCleaner('mongodb')
 const email = 'false@email.com'
 
 describe('SHADOW USERS', () => {
-  /*afterEach(done => databaseCleaner.clean(mongoose.connections[0].db, function () {
+  afterEach(done => databaseCleaner.clean(mongoose.connections[0].db, function () {
     console.log('DB cleaned successfully.')
     done()
-  }))*/
+  }))
   it('Should not pass without a token', done => {
     createShadowUser(null)
       .then(res => {
@@ -38,7 +38,7 @@ describe('SHADOW USERS', () => {
   it('Anybody can get the shadow user', done => {
     createUserAndGetToken(roles.admin)
       .then(createShadowUser)
-      .then(() => chai.request(app).get(`/shadow/users/${email}`))
+      .then(() => chai.request(app).get(`/api/shadow/users/${email}`))
       .then(res => {
         res.body.should.have.property('token')
         done()
@@ -47,7 +47,7 @@ describe('SHADOW USERS', () => {
 })
 
 function createShadowUser (token) {
-  return chai.request(app).post(`/shadow/users?token=${token}`).send({email})
+  return chai.request(app).post(`/api/shadow/users?token=${token}`).send({email})
 }
 
 function validateResponse (res) {

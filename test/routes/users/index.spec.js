@@ -34,7 +34,7 @@ describe('USERS', () => {
       .then(({res, adminToken}) => {
         console.log(res.body)
         return chai.request(app)
-          .get(`/users/${res.body.email}?token=${adminToken}`)
+          .get(`/api/users/${res.body.email}?token=${adminToken}`)
       })
       .then(validateUser)
       .then(done)
@@ -44,7 +44,7 @@ describe('USERS', () => {
     createUser()
       .then(({res, adminToken}) => {
         return chai.request(app)
-          .delete(`/users/${res.body.email}?token=${adminToken}`)
+          .delete(`/api/users/${res.body.email}?token=${adminToken}`)
       })
       .then(res => {
         res.body.should.have.property('message')
@@ -59,7 +59,7 @@ describe('USERS', () => {
       .then(({res, adminToken}) => {
         console.log(res.body)
         return chai.request(app)
-          .put(`/users/${res.body.email}?token=${adminToken}`)
+          .put(`/api/users/${res.body.email}?token=${adminToken}`)
           .send({email: secondEmail})
       })
       .then(res => {
@@ -74,19 +74,19 @@ describe('USERS', () => {
       res.error.status.should.be.equal(403)
     }
     chai.request(app)
-      .post('/users')
+      .post('/api/users')
       .then(validateError)
-      .then(() => chai.request(app).put('/users/aUserEmail'))
+      .then(() => chai.request(app).put('/api/users/aUserEmail'))
       .then(validateError)
-      .then(() => chai.request(app).delete('/users/aUserEmail'))
+      .then(() => chai.request(app).delete('/api/users/aUserEmail'))
       .then(validateError)
-      .then(() => chai.request(app).get('/users/aUserEmail'))
+      .then(() => chai.request(app).get('/api/users/aUserEmail'))
       .then(validateError)
       .then(done)
   })
   it('Should return an error when the email does not exist in the DB', done => {
     chai.request(app)
-      .get('/users/notanemail@email.com')
+      .get('/api/users/notanemail@email.com')
       .then(res => {
         console.log(res.body)
         done()
@@ -117,7 +117,7 @@ function createUser () {
     })
     /* Login to get a token */
     .then(admin => {
-      return chai.request(app).post('/auth/login').send({
+      return chai.request(app).post('/api/auth/login').send({
         email: admin.email,
         password: adminPassword
       }).then(res => res.body.token)
@@ -125,7 +125,7 @@ function createUser () {
     /* Create the user using the endpoint */
     .then(token => {
       return chai.request(app)
-        .post(`/users?token=${token}`)
+        .post(`/api/users?token=${token}`)
         .send({
           email: 'example@microsoft.com',
           company: company._id,
