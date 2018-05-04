@@ -16,10 +16,10 @@ const databaseCleaner = new DatabaseCleaner('mongodb')
 const email = 'false@email.com'
 
 describe('SHADOW USERS', () => {
-  afterEach(done => databaseCleaner.clean(mongoose.connections[0].db, function () {
+  /*afterEach(done => databaseCleaner.clean(mongoose.connections[0].db, function () {
     console.log('DB cleaned successfully.')
     done()
-  }))
+  }))*/
   it('Should not pass without a token', done => {
     createShadowUser(null)
       .then(res => {
