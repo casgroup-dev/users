@@ -5,6 +5,7 @@ const UserModelName = 'User'
 const ShadowUserModelName = 'ShadowUser'
 const CompanyModelName = 'Company'
 const IndustryCategoryName = 'IndustryCategory'
+const BiddingModelName = 'Bidding'
 /* The user can be an admin of the system, does not confuse this role with the role of the user in a billing */
 const roles = {admin: 'admin', companyAdmin: 'companyAdmin', user: 'user', shadowUser: 'shadowUser'}
 
@@ -85,6 +86,22 @@ const Industry = mongoose.model('Industry', mongoose.Schema({
   category: {type: mongoose.Schema.Types.ObjectId, ref: IndustryCategoryName, required: true}
 }))
 
+/**
+ * Bidding. Its own model, belonging to a company and having several users asociated
+ * @type {Model}
+ */
+const Bidding = mongoose.model(BiddingModelName, mongoose.Schema({
+  name: {type: String, required: true, unique: true},
+  company: {type: String, required: true},
+  users: [{
+    username: {type: String},
+    userRole: {type: String}
+  }],
+  // documents: [],
+  bases: {type: String},
+  periods: [[{type: Date}]]
+}))
+
 module.exports = {
   Company,
   Token,
@@ -92,5 +109,6 @@ module.exports = {
   ShadowUser,
   roles,
   IndustryCategory,
-  Industry
+  Industry,
+  Bidding
 }
