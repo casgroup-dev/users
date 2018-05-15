@@ -25,29 +25,59 @@ function create (req, res, next) {
     })
 }
 
-/**
- * Given a bidderCompany of in the params, returns all bidding of that bidderCompany.
- * @param {Object} req
- * @param {Object} res
- * @param {Function} next
- */
-function get (req, res, next) {
-  Bidding.find({bidderCompany: req.params.bidderCompany})
-    .then(biddings => {
-      if (!biddings) {
-        const err = new Error(`There is no biddings associated to '${req.params.businessName}'.`)
-        err.status = 400
+const get = {
+
+  /**
+   * Given a provider in params, returns all biddings of that provider.
+   * @param {Object} req
+   * @param {Object} res
+   * @param {Function} next
+   */
+
+  all: (req, res, next) => {
+    Bidding.findAll()
+      .then(biddings => {
+        if (!biddings) {
+          const err = new Error(`There are no biddings yet`)
+          err.status = 404
+          return next(err)
+        }
+        req.body = biddings // TODO: getPopulated
+        return next()
+      })
+      .catch(err => {
+        logger.error(err)
+        err = new Error('Internal error while retrieving the biddings list.')
+        err.status = 500
         return next(err)
-      }
-      req.body = biddings
-      return next()
-    })
-    .catch(err => {
-      logger.error(err)
-      err = new Error('Internal error while retrieving the biddings list.')
-      err.status = 500
-      return next(err)
-    })
+      })
+  },
+
+  /**
+   * Given a bidding name in params, return all bidding info according user role requesting it.
+   * @param req
+   * @param res
+   * @param next
+   */
+  byId: (req, res, next) => {
+    Bidding.findOne({'id': req.params.id})
+      .then(biddind => {
+        if (!biddind) {
+          const err = new Error('No bidding found')
+          err.status = 404
+          return next(err)
+        }
+        req.body = biddind // TODO: getPopulated
+        return next()
+      })
+      .catch(err => {
+        logger.error(err)
+        err = new Error('Internal error while retrieving the bidding data.')
+        err.status = 500
+        return next(err)
+      })
+    return next()
+  }
 }
 
 /**
@@ -57,22 +87,25 @@ function get (req, res, next) {
  * @param {Function} next
  */
 function update (req, res, next) {
-  if (req.bidderCompany) {
+
+  // TODO: pq se hace este if
+  if (req.body.bidderCompany) {
     const err = new Error('Company can not be changed in midbidding.')
     err.status = 400
     return next(err)
   }
-  Bidding.findOne({name: req.params.name})
-    .then(bidding => {
-      bidding.set(req.body)
-      bidding.save()
-      return next()
-    })
-    .catch(err => {
-      logger.error(err)
-      err = new Error(`Could not update bidding.`)
-      err.status = 500
-      return next(err)
+
+  // TODO: Falta validad nueva data http://mongoosejs.com/docs/api.html#findoneandupdate_findOneAndUpdate
+  Bidding.findOneAndUpdate(
+    {id: req.params.id},
+    req.body,
+    function (err, doc) {
+      if (err) {
+        const err = new Error("Can't update, no such bidding")
+        err.status = 500
+        return next(err)
+      }
+      return next(doc)
     })
 }
 

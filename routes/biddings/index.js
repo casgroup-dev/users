@@ -12,10 +12,15 @@ router.post('/',
   result.send
 )
 
+router.get('/',
+  token.validate,
+  bidding.get.all,
+  result.send
+)
+
 router.get('/:id',
   token.validate,
-  token.validate.roles([roles.admin, roles.companyAdmin]),
-  bidding.get,
+  bidding.get.byId,
   result.send
 )
 

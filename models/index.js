@@ -102,7 +102,7 @@ const Industry = mongoose.model('Industry', mongoose.Schema({
  * @type {Model}
  */
 const Bidding = mongoose.model(BiddingModelName, mongoose.Schema({
-  name: {type: String, required: true, unique: true},
+  name: {type: String, required: true},
   bidderCompany: {type: String, required: true},
   users: [{
     id: {type: mongoose.SchemaType.ObjectId, ref: User, required: true},
