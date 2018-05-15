@@ -1,5 +1,5 @@
 const logger = require('winston-namespace')('bidding:crud')
-const {Bidding} = require('../../../models')
+const {Bidding, User, roles} = require('../../../models')
 
 /**
  * Creates a bidding given the data of the body.
@@ -12,8 +12,8 @@ function create (req, res, next) {
     .then(bidding => {
       req.body = {
         name: bidding.name,
-        company: bidding.company,
-        users: bidding.users
+        bidderCompany: bidding.bidderCompany,
+        users: validateBiddingUsers(bidding.users)
       }
       return next()
     })
@@ -26,13 +26,13 @@ function create (req, res, next) {
 }
 
 /**
- * Given a company of in the params, returns all bidding of that company.
+ * Given a bidderCompany of in the params, returns all bidding of that bidderCompany.
  * @param {Object} req
  * @param {Object} res
  * @param {Function} next
  */
 function get (req, res, next) {
-  Bidding.find({company: req.params.company})
+  Bidding.find({bidderCompany: req.params.bidderCompany})
     .then(biddings => {
       if (!biddings) {
         const err = new Error(`There is no biddings associated to '${req.params.businessName}'.`)
@@ -57,7 +57,7 @@ function get (req, res, next) {
  * @param {Function} next
  */
 function update (req, res, next) {
-  if (req.company) {
+  if (req.bidderCompany) {
     const err = new Error('Company can not be changed in midbidding.')
     err.status = 400
     return next(err)
@@ -93,6 +93,31 @@ function remove (req, res, next) {
       err = new Error('Error while removing the bidding instance.')
       err.status = 500
       return next(err)
+    })
+}
+
+function validateBiddingUsers (users) {
+  // Reference: https://developer.mozilla.org/es/docs/Web/JavaScript/Referencia/Objetos_globales/Array/map
+  users.map(function (currentUser, index, users) {
+    User.findOne({'email': currentUser.id}) // Receives email from front
+      .then(user => {
+        if (!user) {
+          const err = new Error(`No user with email '${currentUser.id}'.`)
+          err.status = 404
+          throw err
+        } else {
+          if (!(currentUser.role in roles.bidding)) {
+            const err = new Error(`Invalid role '${currentUser.role}'.`)
+            err.status = 400 // Bad request
+            throw err
+          }
+          users[index].id = user.id
+          // TODO: Falta la creación de usuario
+        }
+      })
+  })
+    .then(() => {
+      return users
     })
 }
 

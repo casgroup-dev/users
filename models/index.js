@@ -7,7 +7,18 @@ const CompanyModelName = 'Company'
 const IndustryCategoryName = 'IndustryCategory'
 const BiddingModelName = 'Bidding'
 /* The user can be an admin of the system, does not confuse this role with the role of the user in a billing */
-const roles = {admin: 'admin', companyAdmin: 'companyAdmin', user: 'user', shadowUser: 'shadowUser'}
+const roles = {
+  admin: 'admin',
+  companyAdmin: 'companyAdmin',
+  user: 'user',
+  shadowUser: 'shadowUser',
+  bidding: {
+    approver: 'approver',
+    reviser: 'reviser',
+    engineer: 'engineer',
+    provider: 'provider'
+  }
+}
 
 /* Company schema */
 const companySchema = mongoose.Schema({
@@ -48,7 +59,7 @@ const User = mongoose.model(UserModelName, mongoose.Schema({
 }))
 
 /**
- * Shadow User, to hold an invitated company with an email, until it registers and
+ * Shadow User, to hold an invited company with an email, until it registers and
  * becomes a normal user.
  * @type {Model}
  */
@@ -87,19 +98,27 @@ const Industry = mongoose.model('Industry', mongoose.Schema({
 }))
 
 /**
- * Bidding. Its own model, belonging to a company and having several users asociated
+ * Bidding. Its own model, belonging to a bidderCompany and having several users associated
  * @type {Model}
  */
 const Bidding = mongoose.model(BiddingModelName, mongoose.Schema({
   name: {type: String, required: true, unique: true},
-  company: {type: String, required: true},
+  bidderCompany: {type: String, required: true},
   users: [{
-    username: {type: String},
-    userRole: {type: String}
+    id: {type: mongoose.SchemaType.ObjectId, ref: User, required: true},
+    role: {
+      type: String,
+      required: true,
+      default: roles.bidding.provider,
+      enum: Object.values(roles.bidding)
+    },
+    password: {type: String}
   }],
-  // documents: [],
-  bases: {type: String},
-  periods: [[{type: Date}]]
+  bases: [{type: String}],
+  periods: [{
+    start: {type: Date},
+    end: {type: Date}
+  }]
 }))
 
 module.exports = {

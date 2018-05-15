@@ -11,6 +11,6 @@ router.use('/companies', companiesRouter)
 router.use('/users', usersRouter)
 router.use('/shadow/users', shadowUsers)
 router.use('/industries', industries)
-router.use('/bidding', biddings)
+router.use('/biddings', biddings)
 
 module.exports = router

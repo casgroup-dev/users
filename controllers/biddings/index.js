@@ -22,6 +22,17 @@ const input = {
           logger.error(err)
           return next(err)
         })
+    },
+
+    /**
+     * Validates any input to update bidding
+     * @param req
+     * @param res
+     * @param next
+     */
+    update: (req, res, next) => {
+      // TODO
+      next()
     }
   }
 }
