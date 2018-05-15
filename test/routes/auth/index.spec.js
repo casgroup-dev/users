@@ -84,4 +84,24 @@ describe('AUTH', () => {
         done()
       })
   })
+  it('Should not sign a request to upload a file without the query parameters', done => {
+    chai.request(app)
+      .get('/api/auth/sign/put')
+      .then(res => {
+        res.body.should.have.property('error')
+        done()
+      })
+  })
+  it('Should sign a request to upload a file', done => {
+    const fileName = 'filename.pdf'
+    const contentType = 'application/pdf'
+    chai.request(app)
+      .get(`/api/auth/sign/put?fileName=${fileName}&contentType=${contentType}`)
+      .then(res => {
+        console.log(res.body)
+        res.body.should.have.property('signedRequest')
+        res.body.should.have.property('url')
+        done()
+      })
+  })
 })
