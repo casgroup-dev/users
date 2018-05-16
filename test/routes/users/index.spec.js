@@ -129,7 +129,7 @@ function createUser () {
         .send({
           email: 'example@microsoft.com',
           company: company._id,
-          role: roles.user,
+          role: roles.platform.user,
           password: userPassword,
           name: 'Felipe Gonzales'
         })

@@ -87,21 +87,13 @@ const get = {
  * @param {Function} next
  */
 function update (req, res, next) {
-
-  // TODO: pq se hace este if
-  if (req.body.bidderCompany) {
-    const err = new Error('Company can not be changed in midbidding.')
-    err.status = 400
-    return next(err)
-  }
-
-  // TODO: Falta validad nueva data http://mongoosejs.com/docs/api.html#findoneandupdate_findOneAndUpdate
+  // TODO: Falta validar nueva data http://mongoosejs.com/docs/api.html#findoneandupdate_findOneAndUpdate
   Bidding.findOneAndUpdate(
     {id: req.params.id},
     req.body,
     function (err, doc) {
       if (err) {
-        const err = new Error("Can't update, no such bidding")
+        const err = new Error("Can't update. No such bidding")
         err.status = 500
         return next(err)
       }

@@ -75,7 +75,7 @@ validate.roles = roles => {
  */
 validate.company = (req, res, next) => {
   getData(req.options.token).then(tokenData => {
-    if (tokenData.role === roles.admin) return next()
+    if (tokenData.role === roles.platform.admin) return next()
     if (tokenData.company.businessName !== req.params.businessName) {
       return handleError(new Error('Requesting a company that is not of the user.'), res, next)
     }

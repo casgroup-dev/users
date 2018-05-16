@@ -30,13 +30,13 @@ describe('SHADOW USERS', () => {
       })
   })
   it('The admin can create a shadow user', done => {
-    createUserAndGetToken(roles.admin)
+    createUserAndGetToken(roles.platform.admin)
       .then(createShadowUser)
       .then(validateResponse)
       .then(done)
   })
   it('Anybody can get the shadow user', done => {
-    createUserAndGetToken(roles.admin)
+    createUserAndGetToken(roles.platform.admin)
       .then(createShadowUser)
       .then(() => chai.request(app).get(`/api/shadow/users/${email}`))
       .then(res => {

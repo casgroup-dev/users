@@ -25,7 +25,7 @@ inquirer.prompt([
       name: answers.name,
       email: answers.email,
       password: users.hashPassword(answers.password),
-      role: roles.admin
+      role: roles.platform.admin
     }
     let company = await Company.findOne({rut: companyData.rut})
     if (!company) company = await new Company(companyData).save()

@@ -34,7 +34,7 @@ describe('INDUSTRIES', () => {
     })
   })
   it('Should get a json with the categories that each on has an array with the industries', done => {
-    createUserAndGetToken(roles.shadowUser)
+    createUserAndGetToken(roles.platform.shadowUser)
       .then(token => chai.request(app).get(endpoint + `?token=${token}`))
       .then(res => {
         const capitalize = string => string.charAt(0) + string.slice(1).toLowerCase()

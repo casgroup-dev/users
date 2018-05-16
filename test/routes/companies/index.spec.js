@@ -23,7 +23,7 @@ const validCompany = {
 const userData = {
   email: 'example@email.com',
   name: 'Fabián Souto',
-  role: roles.user,
+  role: roles.platform.user,
   password: 'mypassword'
 }
 
@@ -33,7 +33,7 @@ describe('COMPANIES', () => {
     done()
   }))
   it('Should get an error if the input for creation is bad', done => {
-    createUserAndGetToken(roles.admin)
+    createUserAndGetToken(roles.platform.admin)
       .then(token => chai.request(app).post(`/api/companies?token=${token}`).send({businessName: 'Microsoft'}))
       .then(res => {
         res.body.should.have.property('error')
@@ -66,7 +66,7 @@ describe('COMPANIES', () => {
       legalRepresentative: 'Bill Gates',
       legalRepEmail: 'billy@outlook.com'
     }
-    createUserAndGetToken(roles.admin)
+    createUserAndGetToken(roles.platform.admin)
       .then(token => chai.request(app).post(`/api/companies?token=${token}`).send(company).then(res => {
         validateCompany(res.body, company)
         return chai.request(app).get(`/api/companies/${res.body.businessName}?token=${token}`)
@@ -92,7 +92,7 @@ describe('COMPANIES', () => {
       })
   })
   it('Admin should update a company', done => {
-    createUserAndGetToken(roles.admin)
+    createUserAndGetToken(roles.platform.admin)
       .then(token => chai.request(app)
         .put(`/api/companies/${validCompany.businessName}?token=${token}`)
         .send({businessName: 'Apple'}))
@@ -119,7 +119,7 @@ describe('COMPANIES', () => {
   })
   */
   it('Admin should get all the companies', done => {
-    createUserAndGetToken(roles.admin)
+    createUserAndGetToken(roles.platform.admin)
       .then(token => chai.request(app).get(`/api/companies?token=${token}`))
       .then(res => {
         res.body.length.should.be.greaterThan(0)
@@ -129,7 +129,7 @@ describe('COMPANIES', () => {
       .catch(err => console.log(err))
   })
   it('Should get its own company', done => {
-    createUserAndGetToken(roles.companyAdmin)
+    createUserAndGetToken(roles.platform.companyAdmin)
       .then(token => chai.request(app).get(`/api/companies/${validCompany.businessName}?token=${token}`))
       .then(res => {
         res.body.businessName.should.be.equal(validCompany.businessName)
@@ -153,7 +153,7 @@ describe('COMPANIES', () => {
       })
   })
   it('A shadow user has the power to create a company', done => {
-    createUserAndGetToken(roles.shadowUser)
+    createUserAndGetToken(roles.platform.shadowUser)
       .then(token => chai.request(app).post(`/api/companies?token=${token}`).send(validCompany))
       .then(res => {
         console.log(res.body)

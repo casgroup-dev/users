@@ -7,7 +7,7 @@ const {result} = require('../../controllers/utils')
 /* Creation of a user using POST method */
 router.post('/',
   token.validate,
-  token.validate.roles([roles.admin, roles.shadowUser]),
+  token.validate.roles([roles.platform.admin, roles.platform.shadowUser]),
   input.validate.creation,
   users.create,
   result.send
@@ -16,7 +16,7 @@ router.post('/',
 /* Get information of the user using GET method */
 router.get('/:email',
   token.validate,
-  token.validate.roles([roles.admin]),
+  token.validate.roles([roles.platform.admin]),
   users.get,
   result.send
 )
@@ -24,7 +24,7 @@ router.get('/:email',
 /* Edit user using PUT method */
 router.put('/:email',
   token.validate,
-  token.validate.roles([roles.admin]),
+  token.validate.roles([roles.platform.admin]),
   users.update,
   result.send
 )
@@ -32,7 +32,7 @@ router.put('/:email',
 /* Remove an user with the DELETE method */
 router.delete('/:email',
   token.validate,
-  token.validate.roles([roles.admin]),
+  token.validate.roles([roles.platform.admin]),
   users.remove,
   result.send
 )

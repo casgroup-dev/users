@@ -48,7 +48,7 @@ describe('User model', () => {
       .then(company => new User({
         email: email,
         company: company._id,
-        role: roles.user,
+        role: roles.platform.user,
         password: 'gfbfgbgsbd',
         name: 'Tomás Perry'
       }).save())

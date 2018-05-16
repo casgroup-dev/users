@@ -41,7 +41,7 @@ function get (req, res, next) {
     .then(shadowUser => {
       if (shadowUser) {
         /* Set to user to use the token.create middleware that uses this property of the body to create the token, see routes/shadow */
-        req.body.user = {email: shadowUser.email, role: roles.shadowUser}
+        req.body.user = {email: shadowUser.email, role: roles.platform.shadowUser}
         return next()
       }
       const err = new Error(`There is no shadow user with email ${req.params.email}`)

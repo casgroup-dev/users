@@ -7,7 +7,7 @@ const {result} = require('../../controllers/utils')
 /* Creation of a user using POST method */
 router.post('/',
   token.validate,
-  token.validate.roles([roles.admin]),
+  token.validate.roles([roles.platform.admin]),
   input.validate,
   create,
   result.send

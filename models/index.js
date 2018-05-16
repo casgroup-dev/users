@@ -8,10 +8,11 @@ const IndustryCategoryName = 'IndustryCategory'
 const BiddingModelName = 'Bidding'
 /* The user can be an admin of the system, does not confuse this role with the role of the user in a billing */
 const roles = {
-  admin: 'admin',
-  companyAdmin: 'companyAdmin',
-  user: 'user',
-  shadowUser: 'shadowUser',
+  platform: {
+    admin: 'admin',
+    companyAdmin: 'companyAdmin',
+    user: 'user',
+    shadowUser: 'shadowUser'},
   bidding: {
     approver: 'approver',
     reviser: 'reviser',
@@ -50,8 +51,8 @@ const User = mongoose.model(UserModelName, mongoose.Schema({
   role: {
     type: String,
     required: true,
-    default: roles.user,
-    enum: Object.values(roles)
+    default: roles.platform.user,
+    enum: Object.values(roles.platform)
   },
   password: {type: String, required: true},
   phone: {type: String},
@@ -105,7 +106,7 @@ const Bidding = mongoose.model(BiddingModelName, mongoose.Schema({
   name: {type: String, required: true},
   bidderCompany: {type: String, required: true},
   users: [{
-    id: {type: mongoose.SchemaType.ObjectId, ref: User, required: true},
+    id: {type: mongoose.Schema.Types.ObjectId, ref: User, required: true},
     role: {
       type: String,
       required: true,

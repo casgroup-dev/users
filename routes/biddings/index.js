@@ -6,7 +6,7 @@ const {input, bidding} = require('../../controllers/biddings')
 
 router.post('/',
   token.validate,
-  token.validate.roles([roles.admin]),
+  token.validate.roles([roles.platform.admin]),
   input.validate.creation,
   bidding.create,
   result.send
@@ -26,8 +26,15 @@ router.get('/:id',
 
 router.put('/:id',
   token.validate,
-  token.validate.roles([roles.admin]),
+  token.validate.roles([roles.platform.admin]),
   input.validate.update,
   bidding.update,
+  result.send
+)
+
+router.delete('/:id',
+  token.validate,
+  token.validate.roles([roles.platform.admin]),
+  bidding.remove,
   result.send
 )

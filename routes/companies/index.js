@@ -7,7 +7,7 @@ const {roles} = require('../../models')
 /* Creation of a company using POST method */
 router.post('/',
   token.validate,
-  token.validate.roles([roles.admin, roles.shadowUser]), // Admins and shadow users (authorized by the admin) can create companies
+  token.validate.roles([roles.platform.admin, roles.platform.shadowUser]), // Admins and shadow users (authorized by the admin) can create companies
   input.validate.creation,
   companies.create,
   result.send
@@ -16,7 +16,7 @@ router.post('/',
 /* Get all the companies or those that match the given query */
 router.get('/', [
   token.validate,
-  token.validate.roles([roles.admin]),
+  token.validate.roles([roles.platform.admin]),
   companies.get.query,
   result.send
 ])
@@ -24,7 +24,7 @@ router.get('/', [
 /* Get information of the company using GET method */
 router.get('/:businessName',
   token.validate,
-  token.validate.roles([roles.admin, roles.companyAdmin]),
+  token.validate.roles([roles.platform.admin, roles.platform.companyAdmin]),
   token.validate.company,
   companies.get,
   result.send
@@ -33,7 +33,7 @@ router.get('/:businessName',
 /* Edit company using PUT method */
 router.put('/:businessName',
   token.validate,
-  token.validate.roles([roles.admin, roles.companyAdmin]),
+  token.validate.roles([roles.platform.admin, roles.platform.companyAdmin]),
   token.validate.company,
   companies.update,
   result.send
@@ -42,7 +42,7 @@ router.put('/:businessName',
 /* Delete a company using DELETE method */
 router.delete('/:businessName',
   token.validate,
-  token.validate.roles([roles.admin]),
+  token.validate.roles([roles.platform.admin]),
   companies.remove,
   result.send
 )
