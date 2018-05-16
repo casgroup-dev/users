@@ -8,13 +8,17 @@ const {Bidding, User, roles} = require('../../../models')
  * @param {Function} next
  */
 function create (req, res, next) {
-  req.body.bidding.save()
+  if (!req.body) {
+    const err = new Error(`No bidding to create`)
+    err.status = 400
+    return next(err)
+  }
+
+  req.body.users = validateBiddingUsers(req.body.users)
+
+  Bidding(req.body).save()
     .then(bidding => {
-      req.body = {
-        name: bidding.name,
-        bidderCompany: bidding.bidderCompany,
-        users: validateBiddingUsers(bidding.users)
-      }
+      req.body = bidding
       return next()
     })
     .catch(err => {
@@ -121,6 +125,10 @@ function remove (req, res, next) {
     })
 }
 
+/**
+ * Validates users from bidding form.
+ * @param users
+ */
 function validateBiddingUsers (users) {
   // Reference: https://developer.mozilla.org/es/docs/Web/JavaScript/Referencia/Objetos_globales/Array/map
   users.map(function (currentUser, index, users) {
