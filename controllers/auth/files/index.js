@@ -4,7 +4,7 @@ const aws = require('../../../services/aws')
 const sign = {
   /**
    * Middleware to sign a request to upload a new file to the S3 bucket in AWS.
-   * @param {Object} req - Request object with query params: 'fileName', 'contentType' and 'biddingId'.
+   * @param {Object} req - Request object with query params: 'fileName', 'contentType'.
    * @param {Object} res - Response object.
    * @param {Function} next - Function to call the next middleware.
    */
