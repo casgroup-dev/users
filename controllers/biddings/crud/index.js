@@ -18,6 +18,7 @@ function create (req, res, next) {
 
   Bidding(req.body).save()
     .then(bidding => {
+      bidding.users = validateBiddingUsers(bidding.users)
       req.body = bidding
       return next()
     })
