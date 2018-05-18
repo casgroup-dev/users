@@ -1,24 +1,16 @@
 const logger = require('winston-namespace')('bidding:crud')
-const {Bidding, User, roles} = require('../../../models')
+const {Bidding} = require('../../../models')
 
 /**
  * Creates a bidding given the data of the body.
+ *
  * @param {Object} req
  * @param {Object} res
  * @param {Function} next
  */
 function create (req, res, next) {
-  if (!req.body) {
-    const err = new Error(`No bidding to create`)
-    err.status = 400
-    return next(err)
-  }
-
-  req.body.users = validateBiddingUsers(req.body.users)
-
-  Bidding(req.body).save()
+  req.body.bidding.save()
     .then(bidding => {
-      bidding.users = validateBiddingUsers(bidding.users)
       req.body = bidding
       return next()
     })
@@ -123,35 +115,6 @@ function remove (req, res, next) {
       err = new Error('Error while removing the bidding instance.')
       err.status = 500
       return next(err)
-    })
-}
-
-/**
- * Validates users from bidding form.
- * @param users
- */
-function validateBiddingUsers (users) {
-  // Reference: https://developer.mozilla.org/es/docs/Web/JavaScript/Referencia/Objetos_globales/Array/map
-  users.map(function (currentUser, index, users) {
-    User.findOne({'email': currentUser.id}) // Receives email from front
-      .then(user => {
-        if (!user) {
-          const err = new Error(`No user with email '${currentUser.id}'.`)
-          err.status = 404
-          throw err
-        } else {
-          if (!(currentUser.role in roles.bidding)) {
-            const err = new Error(`Invalid role '${currentUser.role}'.`)
-            err.status = 400 // Bad request
-            throw err
-          }
-          users[index].id = user.id
-          // TODO: Falta la creación de usuario
-        }
-      })
-  })
-    .then(() => {
-      return users
     })
 }
 
