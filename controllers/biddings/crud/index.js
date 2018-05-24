@@ -1,5 +1,6 @@
 const logger = require('winston-namespace')('bidding:crud')
-const {Bidding} = require('../../../models')
+const {Bidding, User, roles} = require('../../../models')
+const {token} = require('../../auth')
 
 /**
  * Creates a bidding given the data of the body.
@@ -32,14 +33,18 @@ const get = {
    */
 
   all: (req, res, next) => {
-    Bidding.findAll()
+    Bidding.find()
       .then(biddings => {
         if (!biddings) {
           const err = new Error(`There are no biddings yet`)
           err.status = 404
           return next(err)
         }
-        req.body = biddings // TODO: getPopulated
+        const tokenData = token.getData(req.options.token)
+        const filterData = (bidding) => filterDataByRole(bidding, tokenData.role, tokenData.email)
+        biddings.map(filterData)
+        biddings.map(getCleanAndPopulatedBidding)
+        req.body = biddings
         return next()
       })
       .catch(err => {
@@ -57,14 +62,17 @@ const get = {
    * @param next
    */
   byId: (req, res, next) => {
-    Bidding.findOne({'id': req.params.id})
-      .then(biddind => {
-        if (!biddind) {
+    Bidding.findOne({_id: req.params.id})
+      .then(bidding => {
+        if (!bidding) {
           const err = new Error('No bidding found')
           err.status = 404
           return next(err)
         }
-        req.body = biddind // TODO: getPopulated
+        const tokenData = token.getData(req.options.token)
+        filterDataByRole(bidding, tokenData.role, tokenData.email)
+        getCleanAndPopulatedBidding(bidding)
+        req.body = bidding
         return next()
       })
       .catch(err => {
@@ -73,7 +81,6 @@ const get = {
         err.status = 500
         return next(err)
       })
-    return next()
   }
 }
 
@@ -84,17 +91,23 @@ const get = {
  * @param {Function} next
  */
 function update (req, res, next) {
-  // TODO: Falta validar nueva data http://mongoosejs.com/docs/api.html#findoneandupdate_findOneAndUpdate
-  Bidding.findOneAndUpdate(
-    {id: req.params.id},
-    req.body,
-    function (err, doc) {
-      if (err) {
+  Bidding.findOne({_id: req.params.id})
+    .then(bidding => {
+      if (!bidding) {
         const err = new Error("Can't update. No such bidding")
-        err.status = 500
+        err.status = 404
         return next(err)
       }
-      return next(doc)
+      bidding.set(req.body)
+      getCleanAndPopulatedBidding(bidding)
+      req.body = bidding
+      next()
+    })
+    .catch(err => {
+      logger.error(err)
+      err = new Error('Internal error while retrieving the bidding data.')
+      err.status = 500
+      return next(err)
     })
 }
 
@@ -105,7 +118,7 @@ function update (req, res, next) {
  * @param {Function} next
  */
 function remove (req, res, next) {
-  Bidding.remove({name: req.params.name})
+  Bidding.remove({_id: req.params.id})
     .then(() => {
       req.body = {message: 'Success.'}
       return next()
@@ -116,6 +129,50 @@ function remove (req, res, next) {
       err.status = 500
       return next(err)
     })
+}
+
+function getCleanAndPopulatedBidding (bidding) {
+  Promise.all(bidding.users.map(async (current, index, users) => {
+    await User.findOne({_id: current.id})
+      .then(user => {
+        users[index] = {
+          role: current.role,
+          email: user.email
+        }
+      })
+  }))
+    .then(() => {
+      // logger.info(bidding)
+      return bidding
+    })
+}
+
+/**
+ * Filter data by user role. IMPORTANT: This modifies the bidding object
+ * if role is admin receives all data
+ * if role is user or companyAdmin receives all data except data from other users in users array.
+ * if users is not in users array receives anything
+ * if role is shadowUser receives anything
+ *
+ * @param bidding
+ * @param role
+ * @param email
+ */
+async function filterDataByRole (bidding, role, email) {
+  if (role === roles.platform.user || role === roles.platform.companyAdmin) {
+    await User.findOne({email: email})
+      .then(user => {
+        if (!user) {
+          return {}
+        }
+        bidding.users = bidding.users.filter((current) => {
+          return current.id.equals(user._id)
+        })
+      })
+  } else if (role === roles.platform.shadowUser) {
+    for (let field in bidding) delete bidding[field]
+  }
+  return bidding // role === admin sends all info without modification
 }
 
 module.exports = {

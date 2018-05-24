@@ -60,10 +60,30 @@ const input = {
      * @param next
      */
     update: (req, res, next) => {
-      // TODO
+      const biddingFields = Object.keys(Bidding.schema.obj)
+      const updateFields = Object.keys(req.body)
+      if (isSuperSet(biddingFields, updateFields)) {
+        next()
+      } else {
+        const err = new Error(
+          `Validation error. Request contains some unknown fields-\n
+          \tAllowed fields: '${biddingFields}'\n
+          \tRequested fields: '${updateFields}'`)
+        err.status = 400
+        next(err)
+      }
       next()
     }
   }
+}
+
+function isSuperSet (s1, s2) {
+  for (var elem of s2) {
+    if (!s1.has(elem)) {
+      return false
+    }
+  }
+  return true
 }
 
 /**

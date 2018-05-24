@@ -26,7 +26,7 @@ router.get('/:id',
 
 router.put('/:id',
   token.validate,
-  token.validate.roles([roles.platform.admin]),
+  // token.validate.roles([roles.platform.admin]),
   input.validate.update,
   bidding.update,
   result.send

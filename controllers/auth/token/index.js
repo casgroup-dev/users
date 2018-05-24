@@ -59,7 +59,7 @@ function validate (req, res, next) {
 validate.roles = roles => {
   return async (req, res, next) => {
     const tokenData = await getData(req.options.token).catch(err => handleError(err, res, next))
-    if (roles.indexOf(tokenData.role) === -1) {
+    if (!(tokenData.role in roles)) {
       const err = new Error('Not authorized.')
       err.status = 403
       return next(err)
@@ -113,5 +113,7 @@ function handleError (err, res, next) {
 
 module.exports = {
   create,
-  validate
+  validate,
+  getData,
+  handleError
 }

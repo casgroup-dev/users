@@ -25,8 +25,8 @@ const input = {
         const user = new User(req.body)
         user.validate()
           .then(() => {
-            req.body = {user}
-            next()
+            req. = {user}
+            next()body
           })
           .catch(err => {
             err.status = 400
