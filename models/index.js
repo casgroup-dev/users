@@ -118,7 +118,10 @@ const Bidding = mongoose.model(BiddingModelName, mongoose.Schema({
       url: String
     }]
   }],
-  bases: [{type: String}],
+  bases: [{
+    shortDescription: String,
+    fullText: String // url
+  }],
   periods: [{
     name: {type: String, required: true},
     start: {type: Date, required: true},

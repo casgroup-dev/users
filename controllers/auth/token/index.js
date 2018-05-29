@@ -59,7 +59,7 @@ function validate (req, res, next) {
 validate.roles = roles => {
   return async (req, res, next) => {
     const tokenData = await getData(req.options.token).catch(err => handleError(err, res, next))
-    if (!(tokenData.role in roles)) {
+    if (roles.indexOf(tokenData.role) === -1) {
       const err = new Error('Not authorized.')
       err.status = 403
       return next(err)

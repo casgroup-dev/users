@@ -10,11 +10,11 @@ const input = {
      * body has the following format:
      * { name: 'Licitacion1',
          bidderCompany: 'Mandante1',
-         bases: [ 'file1.pdf', 'file2.pdf' ],
+         bases: { shortDescription: 'Licitación para comprar PCs gamers', fullText: 'bases.pdf'}
          periods: []
          users:
           [ { email: 'admin1@mail.com', role: 'engineer' },
-            { email: 'client1@mail.com', role: 'reviser', password: 'q12we34r' } ] }
+            { email: 'client1@mail.com', role: 'reviser'} ] }
 
      email field in users field will be replaced for its id to match bidding schema
 
@@ -23,6 +23,7 @@ const input = {
      * @param {Function} next
      */
     creation: (req, res, next) => {
+      // logger.info(req.body)
       if (!req.body) {
         const err = new Error('No body')
         err.code = 400
@@ -78,7 +79,7 @@ const input = {
 }
 
 function isSuperSet (s1, s2) {
-  for (var elem of s2) {
+  for (let elem of s2) {
     if (!s1.has(elem)) {
       return false
     }
@@ -113,7 +114,6 @@ function validateBiddingUsers (users) {
             validatedUser.id = user.id
             cpUsers[index] = validatedUser
             return validatedUser // We actually modify input array
-            // TODO: Falta la creación de usuario si es que no existe
           }
         })
     }))
