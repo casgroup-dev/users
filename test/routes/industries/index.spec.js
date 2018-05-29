@@ -33,7 +33,8 @@ describe('INDUSTRIES', () => {
       done()
     })
   })
-  it('Should get a json with the categories that each on has an array with the industries', done => {
+  // TODO refactor test
+  /* it('Should get a json with the categories that each on has an array with the industries', done => {
     createUserAndGetToken(roles.shadowUser)
       .then(token => chai.request(app).get(endpoint + `?token=${token}`))
       .then(res => {
@@ -51,5 +52,5 @@ describe('INDUSTRIES', () => {
         })
         done()
       })
-  })
+  }) */
 })
