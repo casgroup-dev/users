@@ -113,13 +113,18 @@ const Bidding = mongoose.model(BiddingModelName, mongoose.Schema({
       default: roles.bidding.provider,
       enum: Object.values(roles.bidding)
     },
-    password: {type: String}
+    documents: [{
+      docType: String, // Tipo de documento, oferta economica,oferta técnica, certificados de máquinas etc.
+      url: String
+    }]
   }],
   bases: [{type: String}],
   periods: [{
-    start: {type: Date},
-    end: {type: Date}
-  }]
+    name: {type: String, required: true},
+    start: {type: Date, required: true},
+    end: {type: Date, required: true}
+  }],
+  biddingType: {type: String, required: true}
 }))
 
 module.exports = {
