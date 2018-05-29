@@ -38,3 +38,5 @@ router.delete('/:id',
   bidding.remove,
   result.send
 )
+
+module.exports = router
