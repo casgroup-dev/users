@@ -1,5 +1,6 @@
 const logger = require('winston-namespace')('auth')
 const bcrypt = require('bcrypt')
+const files = require('./files')
 const token = require('./token')
 const {User} = require('../../models')
 
@@ -55,6 +56,7 @@ const users = {
 }
 
 module.exports = {
+  files,
   input,
   users,
   token

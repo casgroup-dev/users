@@ -4,7 +4,6 @@ require('mongoose-type-email')
 const UserModelName = 'User'
 const ShadowUserModelName = 'ShadowUser'
 const CompanyModelName = 'Company'
-const IndustryCategoryName = 'IndustryCategory'
 const BiddingModelName = 'Bidding'
 /* The user can be an admin of the system, does not confuse this role with the role of the user in a billing */
 const roles = {
@@ -81,21 +80,15 @@ const Token = mongoose.model('Token', mongoose.Schema({
 }))
 
 /**
- * Industry Category. The name for a set of industries
- * @type {Model}
- */
-const IndustryCategory = mongoose.model(IndustryCategoryName, mongoose.Schema({
-  name: {type: String, required: true, unique: true}
-}))
-
-/**
- * Industry. Code and name of a industry from S.I.I.
+ * Industry. Name of a set of industry plus code and name of a industry from S.I.I.
  * @type {Model}
  */
 const Industry = mongoose.model('Industry', mongoose.Schema({
-  code: {type: Number, required: true, unique: true},
-  name: {type: String, required: true, unique: true},
-  category: {type: mongoose.Schema.Types.ObjectId, ref: IndustryCategoryName, required: true}
+  category: {type: String, required: true, unique: true},
+  industries: [{
+    code: {type: Number, required: true, unique: true},
+    name: {type: String, required: true, unique: true}
+  }]
 }))
 
 /**
@@ -136,7 +129,5 @@ module.exports = {
   User,
   ShadowUser,
   roles,
-  IndustryCategory,
-  Industry,
-  Bidding
+  Industry
 }

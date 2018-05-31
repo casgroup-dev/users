@@ -3,3 +3,6 @@ node_modules
 
 # IDE FILES
 .idea
+
+# ENVIRONMENT VARIABLES
+.env
