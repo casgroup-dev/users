@@ -33,20 +33,25 @@ describe('INDUSTRIES', () => {
       done()
     })
   })
-  it('Should get a json with the categories that each on has an array with the industries', done => {
+  it('Should get all the industries', done => {
     createUserAndGetToken(roles.platform.shadowUser)
       .then(token => chai.request(app).get(endpoint + `?token=${token}`))
       .then(res => {
-        const capitalize = string => string.charAt(0) + string.slice(1).toLowerCase()
-        let category
-        let name
-        rawIndustriesCategories.map(industry => {
-          category = capitalize(industry.category)
-          res.body.should.have.property(category)
-          industry.industries.map(industry => {
-            name = capitalize(industry.name)
-            res.body[category].should.have.property(name)
-            res.body[category][capitalize(name)].should.be.equal(Number(industry.code))
+        // If you want to check what is coming in the response:
+        let checkResponseBody = false
+        if (checkResponseBody) console.log(JSON.stringify(res.body, null, 2))
+        let responseCategory
+        let responseIndustry
+        rawIndustriesCategories.map(industriesCategory => {
+          // Should exist an industry with this category in the response
+          responseCategory = res.body.find(responseCategory => responseCategory.category === industriesCategory.category)
+          responseCategory.should.not.be.equal(undefined)
+          // Each industry of this category should exist in the response
+          industriesCategory.industries.map(industry => {
+            responseIndustry = responseCategory.industries.find(responseIndustry => responseIndustry.name === industry.name)
+            responseIndustry.should.not.be.equal(undefined)
+            responseIndustry.name.should.be.equal(industry.name)
+            responseIndustry.code.should.be.equal(Number(industry.code))
           })
         })
         done()
