@@ -11,10 +11,10 @@ const roles = {
     admin: 'admin',
     companyAdmin: 'companyAdmin',
     user: 'user',
-    shadowUser: 'shadowUser'},
+    shadowUser: 'shadowUser'
+  },
   bidding: {
-    approver: 'approver',
-    reviser: 'reviser',
+    client: 'client',
     engineer: 'engineer',
     provider: 'provider'
   }
@@ -96,38 +96,67 @@ const Industry = mongoose.model('Industry', mongoose.Schema({
  * @type {Model}
  */
 const Bidding = mongoose.model(BiddingModelName, mongoose.Schema({
-  name: {type: String, required: true},
+  title: {type: String, required: true},
   bidderCompany: {type: String, required: true},
+  rules: {
+    // Summary of the rules or description of the bidding
+    summary: String,
+    // Files with all the rules
+    files: [{
+      name: String,
+      url: String
+    }]
+  },
+  economicalForm: [{
+    itemName: String,
+    wantedAmount: Number,
+    measureUnit: String
+  }],
   users: [{
-    id: {type: mongoose.Schema.Types.ObjectId, ref: User, required: true},
+    user: {type: mongoose.Schema.Types.ObjectId, ref: User, required: true},
     role: {
       type: String,
       required: true,
       default: roles.bidding.provider,
       enum: Object.values(roles.bidding)
     },
-    documents: [{
-      docType: String, // Tipo de documento, oferta economica,oferta técnica, certificados de máquinas etc.
-      url: String
+    // Only providers upload this documents
+    documents: {
+      economical: {name: String, url: String},
+      technical: {name: String, url: String}
+    },
+    // Answers to the economical form
+    economicalFormAnswers: [{
+      itemName: String,
+      Quantity: Number,
+      costPerUnit: Number
     }]
   }],
-  bases: [{
-    shortDescription: String,
-    fullText: String // url
+  questions: [{
+    user: {type: mongoose.Schema.Types.ObjectId, ref: User, required: true},
+    question: {type: String, required: true},
+    answer: String
   }],
-  periods: [{
-    name: {type: String, required: true},
-    start: {type: Date, required: true},
-    end: {type: Date, required: true}
-  }],
-  biddingType: {type: String, required: true}
+  deadlines: { // Deadlines for this bidding
+    questions: {start: Date, end: Date}, // Questions of the providers
+    questionsAnswers: {start: Date, end: Date}, // Answers to the questions
+    proposalReception: {start: Date, end: Date}, // Offers from the providers
+    evaluations: {
+      technical: {start: Date, end: Date},
+      economical: {start: Date, end: Date}
+    },
+    technicalVisit: {start: Date, end: Date}, // Only informative
+    results: Date
+  },
+  biddingType: {type: Number, required: true, enum: [1, 2]} // Bidding with 1 stage or two stages
 }))
 
 module.exports = {
+  Bidding,
   Company,
-  Token,
-  User,
-  ShadowUser,
+  Industry,
   roles,
-  Industry
+  ShadowUser,
+  Token,
+  User
 }
