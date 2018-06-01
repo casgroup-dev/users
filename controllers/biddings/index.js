@@ -1,4 +1,5 @@
 const bidding = require('./crud')
+const files = require('./files')
 const {Bidding, User, roles} = require('../../models')
 const logger = require('winston-namespace')('bidding')
 
@@ -74,6 +75,11 @@ const input = {
         next(err)
       }
       next()
+    },
+
+    fileUrl: (req, res, next) => {
+      // Should verify url is valid, i.e file has been uploaded
+      next()
     }
   }
 }
@@ -125,6 +131,7 @@ function validateBiddingUsers (users) {
 }
 
 module.exports = {
-  input,
-  bidding
+  bidding,
+  files,
+  input
 }

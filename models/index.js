@@ -128,7 +128,7 @@ const Bidding = mongoose.model(BiddingModelName, mongoose.Schema({
     // Answers to the economical form
     economicalFormAnswers: [{
       itemName: String,
-      Quantity: Number,
+      quantity: Number,
       costPerUnit: Number
     }]
   }],

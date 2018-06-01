@@ -1,14 +1,21 @@
 const router = require('express').Router()
-const {roles} = require('../../models')
-const {token} = require('../../controllers/auth')
-const {result} = require('../../controllers/utils')
-const {input, bidding} = require('../../controllers/biddings')
+const {roles} = require('../../models/index')
+const {token} = require('../../controllers/auth/index')
+const {result} = require('../../controllers/utils/index')
+const {input, bidding, files} = require('../../controllers/biddings/index')
 
 router.post('/',
   token.validate,
   token.validate.roles([roles.platform.admin]),
   input.validate.creation,
   bidding.create,
+  result.send
+)
+
+router.post('/technical-offer/:url',
+  token.validate,
+  input.validate.fileUrl,
+  files.postTechnicalOffer,
   result.send
 )
 

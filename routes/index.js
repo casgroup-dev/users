@@ -4,7 +4,7 @@ const companiesRouter = require('./companies')
 const usersRouter = require('./users')
 const shadowUsers = require('./shadow/users')
 const industries = require('./industries')
-const biddings = require('./biddings')
+const biddings = require('./biddings/index')
 
 router.use('/auth', authRouter)
 router.use('/companies', companiesRouter)
