@@ -12,13 +12,6 @@ router.post('/',
   result.send
 )
 
-router.post('/technical-offer/:url',
-  token.validate,
-  input.validate.fileUrl,
-  files.postTechnicalOffer,
-  result.send
-)
-
 router.get('/',
   token.validate,
   bidding.get.all,
@@ -36,6 +29,14 @@ router.put('/:id',
   // token.validate.roles([roles.platform.admin]),
   input.validate.update,
   bidding.update,
+  result.send
+)
+
+/* s3 url should come in body */
+router.put('/technical-offer/:id', // Bidding id
+  token.validate,
+  input.validate.fileUrl,
+  files.putTechnicalOfferUrl,
   result.send
 )
 

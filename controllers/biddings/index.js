@@ -1,5 +1,6 @@
 const bidding = require('./crud')
 const files = require('./files')
+const {token} = require('./../auth')
 const {Bidding, User, roles} = require('../../models')
 const logger = require('winston-namespace')('bidding')
 
@@ -78,7 +79,21 @@ const input = {
     },
 
     fileUrl: (req, res, next) => {
-      // Should verify url is valid, i.e file has been uploaded
+      /* https://stackoverflow.com/questions/26726862/how-to-determine-if-object-exists-aws-s3-node-js-sdk
+      *  Should verify url is valid, i.e, file has been uploaded. Why this could be important (or even critical)?
+      *  It's suppose that the frontend gives s3 url to backend. So, what happens if someone intercepts that url and
+      *  replaces it by a malicious one? Above link maybe can give us a way to check that.
+      */
+      if (!req.body.hasOwnProperty('url')) {
+        const err = new Error(`No url provided '${req.body}'. Field name should be 'url'. Any other field is ignored `)
+        err.status = 400
+        next(err)
+      }
+
+      if (!req.body.hasOwnProperty('name')) {
+        req.body.name = 'Economical offer' // Puts a name for default. TODO: Consult this
+      }
+
       next()
     }
   }
