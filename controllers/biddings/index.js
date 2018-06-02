@@ -32,7 +32,7 @@ const input = {
         logger.error(err)
         return next(err)
       }
-      if (!req.body.name || !req.body.bidderCompany) {
+      if (!req.body.title || !req.body.bidderCompany) {
         const err = new Error('No bidding name or bidder company')
         err.code = 400
         logger.error(err)
@@ -89,11 +89,9 @@ const input = {
         err.status = 400
         next(err)
       }
-
       if (!req.body.hasOwnProperty('name')) {
         req.body.name = 'Economical offer' // Puts a name for default. TODO: Consult this
       }
-
       next()
     }
   }
