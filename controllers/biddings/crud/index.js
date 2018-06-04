@@ -70,7 +70,8 @@ const get = {
           return next(err)
         }
         const tokenData = token.getData(req.options.token)
-        filterDataByRole(bidding, tokenData.role, tokenData.email)
+        bidding = filterDataByRole(bidding, tokenData.role, tokenData.email)
+        console.log(bidding)
         getCleanAndPopulatedBidding(bidding)
         req.body = bidding
         return next()
@@ -132,7 +133,7 @@ function remove (req, res, next) {
 }
 
 function getCleanAndPopulatedBidding (bidding) {
-  Promise.all(bidding.users.map(async (current, index, users) => {
+  Promise.all(bidding.users.user.map(async (current, index, users) => {
     await User.findOne({_id: current.id})
       .then(user => {
         users[index] = {
@@ -148,6 +149,58 @@ function getCleanAndPopulatedBidding (bidding) {
 }
 
 /**
+ * Checks the current dates and deadlines and determines
+ * what should be showed.
+ * @param deadlines
+ * @returns showable
+ */
+function getShowableFromDeadlines (deadlines) {
+  var showable = {
+    showQuestions: false,
+    showQuestionsAnswers: false,
+    showTechnicalReception: false,
+    showEconomicalReception: false,
+    showTechnicalEvaluation: false,
+    showEconomicalEvaluation: false,
+    showTechnicalVisit: false,
+    showResults: false
+  }
+  const currentDate = Date()
+  if (currentDate > deadlines.questions.start &&
+    currentDate < deadlines.questions.end) {
+    showable.showQuestions = true
+  }
+  if (currentDate > deadlines.questionsAnswers.start &&
+    currentDate < deadlines.questionsAnswers.end) {
+    showable.showQuestionsAnswers = true
+  }
+  if (currentDate > deadlines.technicalReception.start &&
+    currentDate < deadlines.technicalReception.end) {
+    showable.showTechnicalReception = true
+  }
+  if (currentDate > deadlines.economicalReception.start &&
+    currentDate < deadlines.economicalReception.end) {
+    showable.showEconomicalReception = true
+  }
+  if (currentDate > deadlines.technicalEvaluation.start &&
+    currentDate < deadlines.technicalEvaluation.end) {
+    showable.showTechnicalEvaluation = true
+  }
+  if (currentDate > deadlines.economicalEvaluation.start &&
+    currentDate < deadlines.economicalEvaluation.end) {
+    showable.showEconomicalEvaluation = true
+  }
+  if (currentDate > deadlines.technicalVisit.start &&
+    currentDate < deadlines.technicalVisit.end) {
+    showable.showTechnicalVisit = true
+  }
+  if (currentDate > deadlines.results) {
+    showable.showResults = true
+  }
+  return showable
+}
+
+/**
  * Filter data by user role. IMPORTANT: This modifies the bidding object
  * if role is admin receives all data
  * if role is user or companyAdmin receives all data except data from other users in users array.
@@ -159,20 +212,40 @@ function getCleanAndPopulatedBidding (bidding) {
  * @param email
  */
 async function filterDataByRole (bidding, role, email) {
+  var showableByDate = getShowableFromDeadlines(bidding.deadlines)
   if (role === roles.platform.user || role === roles.platform.companyAdmin) {
+    var userBidding = {}
+    userBidding.title = bidding.title
+    userBidding.rules = bidding.rules
+    userBidding.users = bidding.users
+    userBidding.questions = bidding.questions
+    userBidding.showableByDate = showableByDate
     await User.findOne({email: email})
       .then(user => {
         if (!user) {
           return {}
         }
-        bidding.users = bidding.users.filter((current) => {
-          return current.id.equals(user._id)
+        userBidding.users = bidding.users.filter((current) => {
+          return current.user.id.equals(user._id)
+        })
+        userBidding.questions = bidding.questions.filter((current) => {
+          return current.user.id.equals(user._id)
         })
       })
+    return userBidding
   } else if (role === roles.platform.shadowUser) {
     for (let field in bidding) delete bidding[field]
+  } else {
+    var adminBidding = {}
+    adminBidding.title = bidding.title
+    adminBidding.bidderCompany = bidding.bidderCompany
+    adminBidding.rules = bidding.rules
+    adminBidding.economicalForm = bidding.economicalForm
+    adminBidding.users = bidding.users
+    adminBidding.questions = bidding.questions
+    adminBidding.showableByDate = showableByDate
+    return adminBidding // role === admin sends all info without modification
   }
-  return bidding // role === admin sends all info without modification
 }
 
 module.exports = {

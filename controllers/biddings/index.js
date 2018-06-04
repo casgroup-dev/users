@@ -23,6 +23,7 @@ const input = {
      * @param {Function} next
      */
     creation: (req, res, next) => {
+      console.log(req.body)
       // logger.info(req.body)
       if (!req.body) {
         const err = new Error('No body')
@@ -30,7 +31,7 @@ const input = {
         logger.error(err)
         return next(err)
       }
-      if (!req.body.name || !req.body.bidderCompany) {
+      if (!req.body.title || !req.body.bidderCompany) {
         const err = new Error('No bidding name or bidder company')
         err.code = 400
         logger.error(err)
