@@ -38,30 +38,20 @@ function putTechnicalOfferUrl (req, res, next) {
         return bidding
       })
       .then(async bidding => {
-        let participantIndex = null
-
-        /*
-                await Promise.all(bidding.users.filter((biddingParticipant, index) => {
-                  if (biddingParticipant.user.equals(userId)) { // ObjectID comparision
-                    logger.info(index)
-                    return Promise.resolve(index)
-                  }
-                })).then(values => { participantIndex = values[0] })
-        */
-
-        await bidding.users.filter((biddingParticipant, index) => {
+        let participant = bidding.users.find((biddingParticipant, index) => {
           if (biddingParticipant.user.equals(userId)) { // ObjectID comparision
             logger.info(index)
-            participantIndex = index // Since there is just one this should work
+            return true
           }
         })
 
-        logger.info(`Participant index '${participantIndex}'`)
+        // previous find function returns a reference of the desired object
+        // logger.info(`Participant index '${participant}'`)
 
-        if (!bidding.users[participantIndex].hasOwnProperty('documents')) {
-          bidding.users[participantIndex].documents = {economical: req.body}
+        if (!participant.hasOwnProperty('documents')) {
+          participant.documents = {economical: req.body}
         } else {
-          bidding.users[participantIndex].documents.economical = req.body
+          participant.documents.economical = req.body
         }
         bidding.save()
         return bidding
