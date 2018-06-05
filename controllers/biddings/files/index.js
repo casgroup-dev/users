@@ -13,60 +13,100 @@ const {token} = require('../../auth')
  */
 function putDocumentUrl (req, res, next) {
   // Get user email from token
-  token.getData(req.params.token || req.options.token).then(tokenData => {
-    return tokenData.email
-  }).then(async email => {
-    let userId = await User.findOne({email: email})
-      .then(user => {
-        if (!user) {
-          const err = new Error(`Unexpected: User with email '${email}' not found`)
-          err.status = 404
-          throw err
-        }
-        return user._id
-      })
 
-    Bidding.findOne({_id: req.params.id, 'users.user': userId})
-      .then(bidding => {
-        if (!bidding) {
-          const err = new Error('No such bidding')
-          err.status = 404
-          throw err
-        }
-        return bidding
-      })
-      .then(async bidding => {
-        let participant = bidding.users.find((biddingParticipant, index) => {
-          if (biddingParticipant.user.equals(userId)) { // ObjectID comparision
-            return true
-          }
-        })
-
-        // previous find function returns a reference of the desired object
-        // logger.info(`Participant index '${participant}'`)
-
-        switch (req.params.type) {
-          case 'economical':
-            participant.documents.economicals.push(req.body)
-            break
-          case 'technical':
-            participant.documents.technicals.push(req.body)
-            break
-          default:
-            const err = new Error(`Invalid type: '${req.params.type}'. Allowed types are 'economical' and 'technical'`)
-            err.code = 400
+  getUserIdByToken(req.params.token || req.options.token)
+    .then(userId => {
+      Bidding.findOne({_id: req.params.id, 'users.user': userId})
+        .then(bidding => {
+          if (!bidding) {
+            const err = new Error('No such bidding')
+            err.status = 404
             throw err
-        }
-        bidding.save()
-        req.body = {}
-        next()
+          }
+          return bidding
+        })
+        .then(async bidding => {
+          let participant = bidding.users.find((biddingParticipant) => {
+            if (biddingParticipant.user.equals(userId)) { // ObjectID comparision
+              return true
+            }
+          })
+
+          // previous find function returns a reference of the desired object
+          // logger.info(`Participant index '${participant}'`)
+
+          switch (req.params.type) {
+            case 'economical':
+              participant.documents.economicals.push(req.body)
+              break
+            case 'technical':
+              participant.documents.technicals.push(req.body)
+              break
+            default:
+              const err = new Error(`Invalid type: '${req.params.type}'. Allowed types are 'economical' and 'technical'`)
+              err.code = 400
+              throw err
+          }
+          bidding.save()
+          req.body = {}
+          next()
+        })
+        .catch(err => {
+          next(err)
+        })
+    })
+}
+
+const get = {
+  myFiles: (req, res, next) => {
+    getUserIdByToken(req.params.token || req.options.token)
+      .then(userId => {
+        Bidding.findOne({_id: req.params.id, 'users.user': userId})
+          .then(bidding => {
+            if (!bidding) {
+              const err = new Error('No such bidding')
+              err.status = 404
+              throw err
+            }
+            return bidding
+          })
+          .then(bidding => {
+            let participant = bidding.users.find((biddingParticipant) => {
+              if (biddingParticipant.user.equals(userId)) { // ObjectID comparision
+                return true
+              }
+            })
+            req.body = participant.documents
+            next()
+          })
       })
       .catch(err => {
         next(err)
       })
-  })
+  }
+}
+
+function getUserIdByToken (tkn) {
+  return token.getData(tkn)
+    .then(tokenData => {
+      return tokenData.email
+    }).then(email => {
+      return User.findOne({email: email})
+        .then(user => {
+          if (!user) {
+            const err = new Error(`Unexpected: User with email '${email}' not found`)
+            err.status = 404
+            throw err
+          }
+          return user._id
+        })
+    })
+    .catch(err => {
+      throw err
+    })
 }
 
 module.exports = {
-  putDocumentUrl
+  putDocumentUrl,
+  get
 }

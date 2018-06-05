@@ -47,5 +47,5 @@ function createBidding (users) {
  * Returns a users lists in bidding format
  */
 async function createUsers() {
-  const user1 = await User({name:}).save()
+  // TODO
 }

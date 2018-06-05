@@ -24,6 +24,12 @@ router.get('/:id',
   result.send
 )
 
+router.get('/:id/documents/',
+  token.validate,
+  files.get.myFiles,
+  result.send
+)
+
 router.put('/:id',
   token.validate,
   // token.validate.roles([roles.platform.admin]),
