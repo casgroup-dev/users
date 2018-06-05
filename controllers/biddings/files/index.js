@@ -76,7 +76,10 @@ const get = {
                 return true
               }
             })
-            req.body = participant.documents
+            req.body = {
+              economical: participant.documents.economicals.map(c => { return {name: c.name, url: c.url} }),
+              technical: participant.documents.technicals.map(c => { return {name: c.name, url: c.url} })
+            }
             next()
           })
       })
