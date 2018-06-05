@@ -49,14 +49,14 @@ function putDocumentUrl (req, res, next) {
         // logger.info(`Participant index '${participant}'`)
 
         switch (req.params.type) {
-          case ('economical'):
+          case 'economical':
             if (!participant.hasOwnProperty('documents')) {
               participant.documents = {economicals: [req.body]}
             } else {
               participant.documents.economicals.push(req.body)
             }
             break
-          case ('technical'):
+          case 'technical':
             if (!participant.hasOwnProperty('documents')) {
               participant.documents = {technicals: [req.body]}
             } else {
