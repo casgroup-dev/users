@@ -49,9 +49,9 @@ function putTechnicalOfferUrl (req, res, next) {
         // logger.info(`Participant index '${participant}'`)
 
         if (!participant.hasOwnProperty('documents')) {
-          participant.documents = {economical: req.body}
+          participant.documents = { economicals: [req.body] }
         } else {
-          participant.documents.economical = req.body
+          participant.documents.economicals.push(req.body)
         }
         bidding.save()
         return bidding
