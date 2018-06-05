@@ -17,7 +17,15 @@ describe('BIDDING FILES', () => {
     done()
   }))
 
-  it('Should add a file to a user', done => {
+  it('Should add a economical file to a user', done => {
+    done()
+  })
+
+  it('Should add a technical file to a user', done => {
+    done()
+  })
+
+  it(`Shouldn't add a file to a user if type is incorrect`, done => {
     done()
   })
 })
@@ -26,10 +34,18 @@ describe('BIDDING FILES', () => {
  * Creates a dummy bidding to setting up testing environment
  * Only uses required fields
  */
-function createBidding () {
+function createBidding (users) {
   return new Bidding({
     title: 'Test bidding',
     bidderCompany: 'The Company of Tests',
-    biddingType: 2
+    biddingType: 2,
+    users: users
   }).save()
+}
+
+/**
+ * Returns a users lists in bidding format
+ */
+async function createUsers() {
+  const user1 = await User({name:}).save()
 }

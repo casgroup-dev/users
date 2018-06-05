@@ -90,7 +90,7 @@ const input = {
         next(err)
       }
 
-      if (req.params.type !== 'economical' || req.params.type !== 'technical') {
+      if (req.params.type !== 'economical' && req.params.type !== 'technical') {
         const err = new Error(`Invalid document type: '${req.params.type}'.
              Allowed types are 'economical' and 'technical'`)
         err.status = 400

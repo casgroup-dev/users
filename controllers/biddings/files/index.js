@@ -26,8 +26,6 @@ function putDocumentUrl (req, res, next) {
         return user._id
       })
 
-    logger.info(`User ID '${userId}'`)
-
     Bidding.findOne({_id: req.params.id, 'users.user': userId})
       .then(bidding => {
         if (!bidding) {
@@ -40,7 +38,6 @@ function putDocumentUrl (req, res, next) {
       .then(async bidding => {
         let participant = bidding.users.find((biddingParticipant, index) => {
           if (biddingParticipant.user.equals(userId)) { // ObjectID comparision
-            logger.info(index)
             return true
           }
         })
@@ -49,19 +46,11 @@ function putDocumentUrl (req, res, next) {
         // logger.info(`Participant index '${participant}'`)
 
         switch (req.params.type) {
-          case ('economical'):
-            if (!participant.hasOwnProperty('documents')) {
-              participant.documents = {economicals: [req.body]}
-            } else {
-              participant.documents.economicals.push(req.body)
-            }
+          case 'economical':
+            participant.documents.economicals.push(req.body)
             break
-          case ('technical'):
-            if (!participant.hasOwnProperty('documents')) {
-              participant.documents = {technicals: [req.body]}
-            } else {
-              participant.documents.technicals.push(req.body)
-            }
+          case 'technical':
+            participant.documents.technicals.push(req.body)
             break
           default:
             const err = new Error(`Invalid type: '${req.params.type}'. Allowed types are 'economical' and 'technical'`)
