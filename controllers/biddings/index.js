@@ -84,14 +84,19 @@ const input = {
       *  It's suppose that the frontend gives s3 url to backend. So, what happens if someone intercepts that url and
       *  replaces it by a malicious one? Above link maybe can give us a way to check that.
       */
-      if (!req.body.hasOwnProperty('url')) {
-        const err = new Error(`No url provided '${req.body}'. Field name should be 'url'. Any other field is ignored `)
+      if (!req.body.hasOwnProperty('url') && !req.body.hasOwnProperty('name')) {
+        const err = new Error(`No url or name provided '${req.body}'.`)
         err.status = 400
         next(err)
       }
-      if (!req.body.hasOwnProperty('name')) {
-        req.body.name = 'Economical offer' // Puts a name for default. TODO: Consult this
+
+      if (req.params.type !== 'economical' || req.params.type !== 'technical') {
+        const err = new Error(`Invalid document type: '${req.params.type}'.
+             Allowed types are 'economical' and 'technical'`)
+        err.status = 400
+        next(err)
       }
+      // Puts a name for default. TODO: Consult this
       next()
     }
   }

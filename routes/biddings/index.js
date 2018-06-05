@@ -33,10 +33,10 @@ router.put('/:id',
 )
 
 /* s3 url should come in body */
-router.put('/technical-offer/:id', // Bidding id
+router.put('/:id/documents/:type', // Bidding id and type of the document economical or technical
   token.validate,
   input.validate.fileUrl,
-  files.putTechnicalOfferUrl,
+  files.putDocumentUrl,
   result.send
 )
 

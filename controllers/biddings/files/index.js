@@ -11,9 +11,9 @@ const {token} = require('../../auth')
  * @param {Object} res
  * @param {Function} next
  */
-function putTechnicalOfferUrl (req, res, next) {
+function putDocumentUrl (req, res, next) {
   // Get user email from token
-  token.getData(req.params.token).then(tokenData => {
+  token.getData(req.params.token || req.options.token).then(tokenData => {
     return tokenData.email
   }).then(async email => {
     let userId = await User.findOne({email: email})
@@ -48,16 +48,28 @@ function putTechnicalOfferUrl (req, res, next) {
         // previous find function returns a reference of the desired object
         // logger.info(`Participant index '${participant}'`)
 
-        if (!participant.hasOwnProperty('documents')) {
-          participant.documents = { economicals: [req.body] }
-        } else {
-          participant.documents.economicals.push(req.body)
+        switch (req.params.type) {
+          case ('economical'):
+            if (!participant.hasOwnProperty('documents')) {
+              participant.documents = {economicals: [req.body]}
+            } else {
+              participant.documents.economicals.push(req.body)
+            }
+            break
+          case ('technical'):
+            if (!participant.hasOwnProperty('documents')) {
+              participant.documents = {technicals: [req.body]}
+            } else {
+              participant.documents.technicals.push(req.body)
+            }
+            break
+          default:
+            const err = new Error(`Invalid type: '${req.params.type}'. Allowed types are 'economical' and 'technical'`)
+            err.code = 400
+            throw err
         }
         bidding.save()
-        return bidding
-      })
-      .then(bidding => {
-        req.body = bidding
+        req.body = {}
         next()
       })
       .catch(err => {
@@ -67,5 +79,5 @@ function putTechnicalOfferUrl (req, res, next) {
 }
 
 module.exports = {
-  putTechnicalOfferUrl
+  putDocumentUrl
 }
