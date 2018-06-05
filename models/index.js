@@ -122,8 +122,8 @@ const Bidding = mongoose.model(BiddingModelName, mongoose.Schema({
     },
     // Only providers upload this documents
     documents: {
-      economical: {name: String, url: String},
-      technical: {name: String, url: String}
+      economicals: [{name: String, url: String}],
+      technicals: [{name: String, url: String}]
     },
     // Answers to the economical form
     economicalFormAnswers: [{
