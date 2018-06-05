@@ -16,15 +16,14 @@ function putTechnicalOfferUrl (req, res, next) {
   token.getData(req.params.token).then(tokenData => {
     return tokenData.email
   }).then(async email => {
-    let userId = null
-    await User.findOne({email: email})
+    let userId = await User.findOne({email: email})
       .then(user => {
         if (!user) {
           const err = new Error(`Unexpected: User with email '${email}' not found`)
           err.status = 404
           throw err
         }
-        userId = user._id
+        return user._id
       })
 
     logger.info(`User ID '${userId}'`)
