@@ -113,7 +113,7 @@ const Bidding = mongoose.model(BiddingModelName, mongoose.Schema({
     measureUnit: String
   }],
   users: [{
-    user: {type: mongoose.Schema.Types.ObjectId, ref: User, required: true},
+    user: {type: mongoose.Schema.Types.ObjectId, ref: UserModelName, required: true},
     role: {
       type: String,
       required: true,
@@ -133,7 +133,7 @@ const Bidding = mongoose.model(BiddingModelName, mongoose.Schema({
     }]
   }],
   questions: [{
-    user: {type: mongoose.Schema.Types.ObjectId, ref: User, required: true},
+    user: {type: mongoose.Schema.Types.ObjectId, ref: UserModelName, required: true},
     question: {type: String, required: true},
     answer: String
   }],
