@@ -59,5 +59,12 @@ router.delete('/:id',
   bidding.remove,
   result.send
 )
+/* Input body with field name */
+router.delete('/:id/documents/:type',
+  token.validate,
+  token.validate.roles([roles.platform.user]),
+  files.remove,
+  result.send
+)
 
 module.exports = router
