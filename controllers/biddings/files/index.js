@@ -91,7 +91,6 @@ const get = {
      * .populate({path: 'users', populate: {path: 'user', model: 'User'}})
      * Aunque esto trae todos los field de User. Pero por alguna razón no funciona
      */
-      .populate()
       .then(bidding => {
         if (!bidding) {
           const err = new Error('No such bidding')
@@ -101,16 +100,24 @@ const get = {
         return bidding
       })
       .then(bidding => {
-        req.body = bidding.users.map(participant => {
+        const promises = Promise.all(bidding.users.map(async participant => {
           if (participant.role === roles.bidding.provider) {
-            const company = User.findOne({_id: participant.user})
-            return {
-              provider: participant.user,
+            const company = await User.findOne({_id: participant.user})
+              .populate({path: 'company', select: 'businessName'})
+              .then(u => {
+                return u.company.businessName
+              })
+            const retValue = {
+              provider: company,
               documents: removeIdFromDocuments(participant.documents)
             }
+            return retValue
           }
+        }))
+        promises.then(ret => {
+          req.body = ret
+          next()
         })
-        next()
       })
       .catch(err => {
         next(err)
@@ -147,6 +154,5 @@ function removeIdFromDocuments (documents) {
 
 module.exports = {
   putDocumentUrl,
-  get,
-  getUserIdByToken
+  get
 }
