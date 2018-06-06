@@ -32,8 +32,8 @@ const input = {
         logger.error(err)
         return next(err)
       }
-      if (!req.body.title || !req.body.bidderCompany) {
-        const err = new Error('No bidding name or bidder company')
+      if (!req.body.title || !req.body.bidderCompany || !req.body.biddingType) {
+        const err = new Error('No bidding title, bidder company or bidding type')
         err.code = 400
         logger.error(err)
         return next(err)

@@ -76,12 +76,41 @@ const get = {
                 return true
               }
             })
-            req.body = {
-              economical: participant.documents.economicals.map(c => { return {name: c.name, url: c.url} }),
-              technical: participant.documents.technicals.map(c => { return {name: c.name, url: c.url} })
-            }
+            req.body = removeIdFromDocuments(participant.documents)
             next()
           })
+      })
+      .catch(err => {
+        next(err)
+      })
+  },
+
+  all: (req, res, next) => {
+    Bidding.findOne({_id: req.params.id})
+    /* TODO: popular compañias usuarios. Debería funcionar con algo como
+     * .populate({path: 'users', populate: {path: 'user', model: 'User'}})
+     * Aunque esto trae todos los field de User. Pero por alguna razón no funciona
+     */
+      .populate()
+      .then(bidding => {
+        if (!bidding) {
+          const err = new Error('No such bidding')
+          err.status = 404
+          throw err
+        }
+        return bidding
+      })
+      .then(bidding => {
+        req.body = bidding.users.map(participant => {
+          if (participant.role === roles.bidding.provider) {
+            const company = User.findOne({_id: participant.user})
+            return {
+              provider: participant.user,
+              documents: removeIdFromDocuments(participant.documents)
+            }
+          }
+        })
+        next()
       })
       .catch(err => {
         next(err)
@@ -109,7 +138,15 @@ function getUserIdByToken (tkn) {
     })
 }
 
+function removeIdFromDocuments (documents) {
+  return {
+    economical: documents.economicals.map(c => { return {name: c.name, url: c.url, date: c.date} }),
+    technical: documents.technicals.map(c => { return {name: c.name, url: c.url, date: c.date} })
+  }
+}
+
 module.exports = {
   putDocumentUrl,
-  get
+  get,
+  getUserIdByToken
 }
