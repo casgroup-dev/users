@@ -63,18 +63,27 @@ const get = {
    */
   byId: (req, res, next) => {
     Bidding.findOne({_id: req.params.id})
-      .then(bidding => {
+      .then(async bidding => {
         if (!bidding) {
           const err = new Error('No bidding found')
           err.status = 404
           return next(err)
         }
-        const tokenData = token.getData(req.options.token)
-        bidding = filterDataByRole(bidding, tokenData.role, tokenData.email)
-        console.log(bidding)
-        getCleanAndPopulatedBidding(bidding)
-        req.body = bidding
-        return next()
+        token.getData(req.options.token)
+          .then(async tokenData => {
+            var deadlines = checkDeadlines(bidding.deadlines)
+            var filteredBidding = await filterDataByRole(bidding, tokenData.role, tokenData.email)
+            filteredBidding['showable'] = deadlines
+            // filteredBidding = await getCleanAndPopulatedBidding(filteredBidding)
+            req.body = filteredBidding
+            return next()
+          })
+          .catch(err => {
+            logger.error(err)
+            err = new Error('cago.')
+            err.status = 500
+            return next(err)
+          })
       })
       .catch(err => {
         logger.error(err)
@@ -133,18 +142,19 @@ function remove (req, res, next) {
 }
 
 function getCleanAndPopulatedBidding (bidding) {
-  Promise.all(bidding.users.user.map(async (current, index, users) => {
-    await User.findOne({_id: current.id})
+  var cleanBiddingUsers = []
+  Promise.all(bidding.users.map(async (current, index, users) => {
+    await User.findOne({_id: current.user})
       .then(user => {
-        users[index] = {
-          role: current.role,
-          email: user.email
-        }
+        cleanBiddingUsers.push({
+          'user': user.email,
+          'economicalFormAnswers': users[index].economicalFormAnswers
+        })
       })
   }))
     .then(() => {
-      // logger.info(bidding)
-      return bidding
+      logger.info(cleanBiddingUsers)
+      return cleanBiddingUsers
     })
 }
 
@@ -154,7 +164,7 @@ function getCleanAndPopulatedBidding (bidding) {
  * @param deadlines
  * @returns showable
  */
-function getShowableFromDeadlines (deadlines) {
+function checkDeadlines (deadlines) {
   var showable = {
     showQuestions: false,
     showQuestionsAnswers: false,
@@ -212,24 +222,23 @@ function getShowableFromDeadlines (deadlines) {
  * @param email
  */
 async function filterDataByRole (bidding, role, email) {
-  var showableByDate = getShowableFromDeadlines(bidding.deadlines)
   if (role === roles.platform.user || role === roles.platform.companyAdmin) {
     var userBidding = {}
     userBidding.title = bidding.title
     userBidding.rules = bidding.rules
     userBidding.users = bidding.users
     userBidding.questions = bidding.questions
-    userBidding.showableByDate = showableByDate
+    userBidding.deadlines = bidding.deadlines
     await User.findOne({email: email})
       .then(user => {
         if (!user) {
           return {}
         }
         userBidding.users = bidding.users.filter((current) => {
-          return current.user.id.equals(user._id)
+          return current.user.equals(user._id)
         })
         userBidding.questions = bidding.questions.filter((current) => {
-          return current.user.id.equals(user._id)
+          return current.user.equals(user._id)
         })
       })
     return userBidding
@@ -238,12 +247,11 @@ async function filterDataByRole (bidding, role, email) {
   } else {
     var adminBidding = {}
     adminBidding.title = bidding.title
-    adminBidding.bidderCompany = bidding.bidderCompany
     adminBidding.rules = bidding.rules
-    adminBidding.economicalForm = bidding.economicalForm
+    adminBidding.bidderCompany = bidding.bidderCompany
     adminBidding.users = bidding.users
     adminBidding.questions = bidding.questions
-    adminBidding.showableByDate = showableByDate
+    adminBidding.deadlines = bidding.deadlines
     return adminBidding // role === admin sends all info without modification
   }
 }
