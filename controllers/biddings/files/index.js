@@ -126,8 +126,8 @@ const get = {
 }
 
 function remove (req, res, next) {
-  if (!req.body.hasOwnProperty('name')) {
-    const err = new Error(`No file name provided '${req.body}'. Field should be 'name'`)
+  if (!req.query.name) {
+    const err = new Error(`No file name provided. Query param should be 'name'`)
     err.code = 400
     next(err)
   }
@@ -153,11 +153,11 @@ function remove (req, res, next) {
           switch (req.params.type) {
             case 'technical':
               participant.documents.technicals.splice(
-                indexOfObject(participant.documents.technicals, 'name', req.body.name))
+                indexOfObject(participant.documents.technicals, 'name', req.query.name), 1)
               break
             case 'economical':
               participant.documents.economicals.splice(
-                indexOfObject(participant.documents.economicals, 'name', req.body.name))
+                indexOfObject(participant.documents.economicals, 'name', req.query.name), 1)
               break
             default:
               const err = new Error(`Invalid type: '${req.params.type}'. Allowed types are 'economical' and 'technical'`)
