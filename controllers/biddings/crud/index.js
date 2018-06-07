@@ -56,7 +56,7 @@ const get = {
   },
 
   /**
-   * Given a bidding name in params, return all bidding info according user role requesting it.
+   * Given a bidding name in params, return the specific bidding info according to user role requesting it.
    * @param req
    * @param res
    * @param next
@@ -71,16 +71,15 @@ const get = {
         }
         token.getData(req.options.token)
           .then(async tokenData => {
-            var deadlines = checkDeadlines(bidding.deadlines)
-            var filteredBidding = await filterDataByRole(bidding, tokenData.role, tokenData.email)
-            filteredBidding['showable'] = deadlines
-            // filteredBidding = await getCleanAndPopulatedBidding(filteredBidding)
+            var boolDeadlines = checkDeadlines(bidding.deadlines)
+            var filteredBidding = await filterIdBiddingByRole(bidding, tokenData.role, tokenData.email, boolDeadlines)
+            // filteredBidding = await changeIdToEmail(filteredBidding)
             req.body = filteredBidding
             return next()
           })
           .catch(err => {
             logger.error(err)
-            err = new Error('cago.')
+            err = new Error('Cannot obtain token data.')
             err.status = 500
             return next(err)
           })
@@ -142,6 +141,27 @@ function remove (req, res, next) {
 }
 
 function getCleanAndPopulatedBidding (bidding) {
+  Promise.all(bidding.users.map(async (current, index, users) => {
+    await User.findOne({_id: current.id})
+      .then(user => {
+        users[index] = {
+          role: current.role,
+          email: user.email
+        }
+      })
+  }))
+    .then(() => {
+      // logger.info(bidding)
+      return bidding
+    })
+}
+
+/**
+ * Changes the users list ids for email.
+ * @param bidding
+ */
+function changeIdToEmail (bidding) {
+  // TODO: not working, async problem
   var cleanBiddingUsers = []
   Promise.all(bidding.users.map(async (current, index, users) => {
     await User.findOne({_id: current.user})
@@ -159,55 +179,54 @@ function getCleanAndPopulatedBidding (bidding) {
 }
 
 /**
- * Checks the current dates and deadlines and determines
- * what should be showed.
+ * Checks the current dates and deadlines.
  * @param deadlines
  * @returns showable
  */
 function checkDeadlines (deadlines) {
-  var showable = {
-    showQuestions: false,
-    showQuestionsAnswers: false,
-    showTechnicalReception: false,
-    showEconomicalReception: false,
-    showTechnicalEvaluation: false,
-    showEconomicalEvaluation: false,
-    showTechnicalVisit: false,
-    showResults: false
+  var stages = {
+    onQuestions: false,
+    onQuestionsAnswers: false,
+    onTechnicalReception: false,
+    onEconomicalReception: false,
+    onTechnicalEvaluation: false,
+    onEconomicalEvaluation: false,
+    onTechnicalVisit: false,
+    onResults: false
   }
   const currentDate = Date()
   if (currentDate > deadlines.questions.start &&
     currentDate < deadlines.questions.end) {
-    showable.showQuestions = true
+    stages.onQuestions = true
   }
   if (currentDate > deadlines.questionsAnswers.start &&
     currentDate < deadlines.questionsAnswers.end) {
-    showable.showQuestionsAnswers = true
+    stages.onQuestionsAnswers = true
   }
   if (currentDate > deadlines.technicalReception.start &&
     currentDate < deadlines.technicalReception.end) {
-    showable.showTechnicalReception = true
+    stages.onTechnicalReception = true
   }
   if (currentDate > deadlines.economicalReception.start &&
     currentDate < deadlines.economicalReception.end) {
-    showable.showEconomicalReception = true
+    stages.onEconomicalReception = true
   }
   if (currentDate > deadlines.technicalEvaluation.start &&
     currentDate < deadlines.technicalEvaluation.end) {
-    showable.showTechnicalEvaluation = true
+    stages.onTechnicalEvaluation = true
   }
   if (currentDate > deadlines.economicalEvaluation.start &&
     currentDate < deadlines.economicalEvaluation.end) {
-    showable.showEconomicalEvaluation = true
+    stages.onEconomicalEvaluation = true
   }
   if (currentDate > deadlines.technicalVisit.start &&
     currentDate < deadlines.technicalVisit.end) {
-    showable.showTechnicalVisit = true
+    stages.onTechnicalVisit = true
   }
   if (currentDate > deadlines.results) {
-    showable.showResults = true
+    stages.onResults = true
   }
-  return showable
+  return stages
 }
 
 /**
@@ -223,12 +242,58 @@ function checkDeadlines (deadlines) {
  */
 async function filterDataByRole (bidding, role, email) {
   if (role === roles.platform.user || role === roles.platform.companyAdmin) {
+    await User.findOne({email: email})
+      .then(user => {
+        if (!user) {
+          return {}
+        }
+        bidding.users = bidding.users.filter((current) => {
+          return current.id.equals(user._id)
+        })
+      })
+  } else if (role === roles.platform.shadowUser) {
+    for (let field in bidding) delete bidding[field]
+  }
+  return bidding // role === admin sends all info without modification
+}
+
+/**
+ * Filter data by user role and the current deadlines state.
+ * @param bidding
+ * @param role
+ * @param email
+ * @param boolDeadlines
+ */
+async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
+  var permissions = {
+    'seeParticipants': false,
+    'uploadTecnical': false,
+    'uploadEconomical': false,
+    'reviewTechnical': false,
+    'reviewEconomical': false,
+    'askQuestion': false,
+    'seeQuestions': false,
+    'answerQuestions': false,
+    'seeAnswers': false,
+    'seeNotice': false,
+    'canModify': false,
+    'seeSchedule': true}
+  if (role === roles.platform.user || role === roles.platform.companyAdmin) {
+    /* permissions */
+    permissions.uploadTecnical = boolDeadlines.onTechnicalReception
+    permissions.uploadEconomical = boolDeadlines.onEconomicalReception
+    permissions.askQuestion = boolDeadlines.onQuestions
+    permissions.seeAnswersQuestion = boolDeadlines.onQuestionsAnswers
+    permissions.seeNotice = true
+
+    /* create */
     var userBidding = {}
     userBidding.title = bidding.title
     userBidding.rules = bidding.rules
     userBidding.users = bidding.users
     userBidding.questions = bidding.questions
     userBidding.deadlines = bidding.deadlines
+    userBidding.permissions = permissions
     await User.findOne({email: email})
       .then(user => {
         if (!user) {
@@ -245,6 +310,15 @@ async function filterDataByRole (bidding, role, email) {
   } else if (role === roles.platform.shadowUser) {
     for (let field in bidding) delete bidding[field]
   } else {
+    /* permissions */
+    permissions.seeParticipants = true
+    permissions.reviewTechnical = boolDeadlines.onTechnicalEvaluation
+    permissions.reviewEconomical = boolDeadlines.onEconomicalEvaluation
+    permissions.seeQuestion = boolDeadlines.onQuestions || boolDeadlines.onQuestionsAnswers
+    permissions.answerQuestions = boolDeadlines.onQuestions || boolDeadlines.onQuestionsAnswers
+    permissions.canModify = true
+
+    /* create */
     var adminBidding = {}
     adminBidding.title = bidding.title
     adminBidding.rules = bidding.rules
@@ -252,6 +326,7 @@ async function filterDataByRole (bidding, role, email) {
     adminBidding.users = bidding.users
     adminBidding.questions = bidding.questions
     adminBidding.deadlines = bidding.deadlines
+    adminBidding.permissions = permissions
     return adminBidding // role === admin sends all info without modification
   }
 }
