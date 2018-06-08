@@ -1,5 +1,5 @@
 const logger = require('winston-namespace')('bidding:questions')
-const {Bidding, User,} = require('../../../models')
+const {Bidding, User} = require('../../../models')
 const {token} = require('../../auth')
 
 /**
@@ -15,6 +15,7 @@ function update (req, res, next) {
       Bidding.findOne({_id: req.params.id, 'users.user': userId})
         .then(bidding => {
           if (!bidding) {
+            console.log('no encuentra la bidding')
             const err = new Error('No such bidding')
             err.status = 404
             throw err
@@ -22,13 +23,15 @@ function update (req, res, next) {
           return bidding
         })
         .then(bidding => {
+          console.log('encuentra la bidding')
           bidding.questions.push({
-            user: getUserIdByToken(req.params.token || req.options.token).then(userId => {
-              return { _id: userId }
-            }),
-            question: req.body
+            user: userId,
+            question: req.body.question
           })
           bidding.save()
+        })
+        .catch(() => {
+          console.log('Error')
         })
     })
     .catch(err => {

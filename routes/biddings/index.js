@@ -15,7 +15,7 @@ router.post('/',
 router.put('/:id/questions',
   token.validate,
   token.validate.roles([roles.platform.user]),
-  input.validate.questions,
+  input.validate.question,
   questions.update,
   result.send
 )
