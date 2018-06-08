@@ -1,8 +1,8 @@
 const router = require('express').Router()
-const {roles} = require('../../models')
-const {token} = require('../../controllers/auth')
-const {result} = require('../../controllers/utils')
-const {input, bidding} = require('../../controllers/biddings')
+const {roles} = require('../../models/index')
+const {token} = require('../../controllers/auth/index')
+const {result} = require('../../controllers/utils/index')
+const {input, bidding, files} = require('../../controllers/biddings/index')
 
 router.post('/',
   token.validate,
@@ -24,6 +24,19 @@ router.get('/:id',
   result.send
 )
 
+router.get('/:id/documents/',
+  token.validate,
+  files.get.myFiles,
+  result.send
+)
+
+router.get('/:id/documents/all/',
+  token.validate,
+  token.validate.roles([roles.platform.admin]),
+  files.get.all,
+  result.send
+)
+
 router.put('/:id',
   token.validate,
   // token.validate.roles([roles.platform.admin]),
@@ -32,10 +45,25 @@ router.put('/:id',
   result.send
 )
 
+/* s3 url should come in body */
+router.put('/:id/documents/:type', // Bidding id and type of the document economical or technical
+  token.validate,
+  input.validate.fileUrl,
+  files.putDocumentUrl,
+  result.send
+)
+
 router.delete('/:id',
   token.validate,
   token.validate.roles([roles.platform.admin]),
   bidding.remove,
+  result.send
+)
+/* Input body with field name */
+router.delete('/:id/documents/:type',
+  token.validate,
+  token.validate.roles([roles.platform.user]),
+  files.remove,
   result.send
 )
 
