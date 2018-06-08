@@ -1,4 +1,5 @@
 const bidding = require('./crud')
+const questions = require('./questions')
 const {Bidding, User, roles} = require('../../models')
 const logger = require('winston-namespace')('bidding')
 
@@ -74,6 +75,21 @@ const input = {
         next(err)
       }
       next()
+    },
+
+    /**
+     * Checks that a questions is not empty
+     * @param req
+     * @param res
+     * @param next
+     */
+    question: (req, res, next) => {
+      if (!req.body.question()) {
+        const err = new Error('Question field is empty')
+        err.code = 400
+        logger.error(err)
+        return next(err)
+      }
     }
   }
 }
@@ -126,5 +142,6 @@ function validateBiddingUsers (users) {
 
 module.exports = {
   input,
-  bidding
+  bidding,
+  questions
 }
