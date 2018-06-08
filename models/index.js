@@ -113,7 +113,7 @@ const Bidding = mongoose.model(BiddingModelName, mongoose.Schema({
     measureUnit: String
   }],
   users: [{
-    user: {type: mongoose.Schema.Types.ObjectId, ref: User, required: true},
+    user: {type: mongoose.Schema.Types.ObjectId, ref: UserModelName, required: true},
     role: {
       type: String,
       required: true,
@@ -122,18 +122,18 @@ const Bidding = mongoose.model(BiddingModelName, mongoose.Schema({
     },
     // Only providers upload this documents
     documents: {
-      economical: {name: String, url: String},
-      technical: {name: String, url: String}
+      economicals: [{name: String, url: String, date: {type: Date, default: Date.now}}],
+      technicals: [{name: String, url: String, date: {type: Date, default: Date.now}}]
     },
     // Answers to the economical form
     economicalFormAnswers: [{
       itemName: String,
-      Quantity: Number,
+      specifications: String,
       costPerUnit: Number
     }]
   }],
   questions: [{
-    user: {type: mongoose.Schema.Types.ObjectId, ref: User, required: true},
+    user: {type: mongoose.Schema.Types.ObjectId, ref: UserModelName, required: true},
     question: {type: String, required: true},
     answer: String
   }],
