@@ -122,8 +122,16 @@ const Bidding = mongoose.model(BiddingModelName, mongoose.Schema({
     },
     // Only providers upload this documents
     documents: {
-      economicals: [{name: String, url: String, date: {type: Date, default: Date.now}}],
-      technicals: [{name: String, url: String, date: {type: Date, default: Date.now}}]
+      economicals: [{
+        name: {type: String, unique: true},
+        url: {type: String, unique: true},
+        date: {type: Date, default: Date.now}
+      }],
+      technicals: [{
+        name: {type: String, unique: true},
+        url: {type: String, unique: true},
+        date: {type: Date, default: Date.now}
+      }]
     },
     // Answers to the economical form
     economicalFormAnswers: [{
@@ -140,11 +148,10 @@ const Bidding = mongoose.model(BiddingModelName, mongoose.Schema({
   deadlines: { // Deadlines for this bidding
     questions: {start: Date, end: Date}, // Questions of the providers
     questionsAnswers: {start: Date, end: Date}, // Answers to the questions
-    proposalReception: {start: Date, end: Date}, // Offers from the providers
-    evaluations: {
-      technical: {start: Date, end: Date},
-      economical: {start: Date, end: Date}
-    },
+    technicalReception: {start: Date, end: Date},
+    economicalReception: {start: Date, end: Date}, // Offers from the providers
+    technicalEvaluation: {start: Date, end: Date},
+    economicalEvaluation: {start: Date, end: Date},
     technicalVisit: {start: Date, end: Date}, // Only informative
     results: Date
   },
