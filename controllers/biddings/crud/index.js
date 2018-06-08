@@ -13,13 +13,13 @@ function create (req, res, next) {
   req.body.bidding.save()
     .then(bidding => {
       req.body = bidding
-      return next()
+      next()
     })
     .catch(err => {
       logger.error(err)
       err = new Error('Internal error while storing the new bidding instance.')
       err.status = 500
-      return next(err)
+      next(err)
     })
 }
 
@@ -38,20 +38,20 @@ const get = {
         if (!biddings) {
           const err = new Error(`There are no biddings yet`)
           err.status = 404
-          return next(err)
+          next(err)
         }
         const tokenData = token.getData(req.options.token)
         const filterData = (bidding) => filterDataByRole(bidding, tokenData.role, tokenData.email)
         biddings.map(filterData)
         biddings.map(getCleanAndPopulatedBidding)
         req.body = biddings
-        return next()
+        next()
       })
       .catch(err => {
         logger.error(err)
         err = new Error('Internal error while retrieving the biddings list.')
         err.status = 500
-        return next(err)
+        next(err)
       })
   },
 
@@ -67,7 +67,7 @@ const get = {
         if (!bidding) {
           const err = new Error('No bidding found')
           err.status = 404
-          return next(err)
+          next(err)
         }
         token.getData(req.options.token)
           .then(async tokenData => {
@@ -75,20 +75,20 @@ const get = {
             var filteredBidding = await filterIdBiddingByRole(bidding, tokenData.role, tokenData.email, boolDeadlines)
             // filteredBidding = await changeIdToEmail(filteredBidding)
             req.body = filteredBidding
-            return next()
+            next()
           })
           .catch(err => {
             logger.error(err)
             err = new Error('Cannot obtain token data.')
             err.status = 500
-            return next(err)
+            next(err)
           })
       })
       .catch(err => {
         logger.error(err)
         err = new Error('Internal error while retrieving the bidding data.')
         err.status = 500
-        return next(err)
+        next(err)
       })
   }
 }
@@ -103,9 +103,9 @@ function update (req, res, next) {
   Bidding.findOne({_id: req.params.id})
     .then(bidding => {
       if (!bidding) {
-        const err = new Error("Can't update. No such bidding")
+        const err = new Error('Can\'t update. No such bidding')
         err.status = 404
-        return next(err)
+        next(err)
       }
       bidding.set(req.body)
       getCleanAndPopulatedBidding(bidding)
@@ -116,7 +116,7 @@ function update (req, res, next) {
       logger.error(err)
       err = new Error('Internal error while retrieving the bidding data.')
       err.status = 500
-      return next(err)
+      next(err)
     })
 }
 
@@ -130,13 +130,13 @@ function remove (req, res, next) {
   Bidding.remove({_id: req.params.id})
     .then(() => {
       req.body = {message: 'Success.'}
-      return next()
+      next()
     })
     .catch(err => {
       logger.error(err)
       err = new Error('Error while removing the bidding instance.')
       err.status = 500
-      return next(err)
+      next(err)
     })
 }
 
@@ -277,7 +277,8 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
     'seeAnswers': false,
     'seeNotice': false,
     'canModify': false,
-    'seeSchedule': true}
+    'seeSchedule': true
+  }
   if (role === roles.platform.user || role === roles.platform.companyAdmin) {
     /* permissions */
     permissions.uploadTecnical = boolDeadlines.onTechnicalReception
@@ -331,9 +332,36 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
   }
 }
 
+function economicalOfferTable (req, res, next) {
+  token.getUserId(req.params.token || req.options.token)
+    .then(userId => {
+      Bidding.findOne({_id: req.params.id, 'users.user': userId})
+        .then(bidding => {
+          if (!bidding) {
+            const err = new Error('No such bidding')
+            err.status = 404
+            throw err
+          }
+          return bidding
+        })
+        .then(async bidding => {
+          let participant = bidding.users.find((biddingParticipant) => {
+            if (biddingParticipant.user.equals(userId)) { // ObjectID comparision
+              return true
+            }
+          })
+          participant.economicalFormAnswers = req.body
+          next()
+        })
+    })
+    .catch(err => {
+      next(err)
+    })
+}
+
 module.exports = {
   create,
   get,
-  update,
+  update: {update, economicalOfferTable},
   remove
 }

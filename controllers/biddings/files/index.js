@@ -15,7 +15,7 @@ const {s3} = require('../../../services/aws')
 function putDocumentUrl (req, res, next) {
   // Get user email from token
 
-  getUserIdByToken(req.params.token || req.options.token)
+  token.getUserId(req.params.token || req.options.token)
     .then(userId => {
       Bidding.findOne({_id: req.params.id, 'users.user': userId})
         .then(bidding => {
@@ -60,7 +60,7 @@ function putDocumentUrl (req, res, next) {
 
 const get = {
   myFiles: (req, res, next) => {
-    getUserIdByToken(req.params.token || req.options.token)
+    token.getUserId(req.params.token || req.options.token)
       .then(userId => {
         Bidding.findOne({_id: req.params.id, 'users.user': userId})
           .then(bidding => {
@@ -133,7 +133,7 @@ function remove (req, res, next) {
     next(err)
   }
 
-  getUserIdByToken(req.params.token || req.options.token)
+  token.getUserId(req.params.token || req.options.token)
     .then(userId => {
       Bidding.findOne({_id: req.params.id, 'users.user': userId})
         .then(bidding => {
@@ -183,26 +183,6 @@ function remove (req, res, next) {
     })
     .catch(err => {
       next(err)
-    })
-}
-
-function getUserIdByToken (tkn) {
-  return token.getData(tkn)
-    .then(tokenData => {
-      return tokenData.email
-    }).then(email => {
-      return User.findOne({email: email})
-        .then(user => {
-          if (!user) {
-            const err = new Error(`Unexpected: User with email '${email}' not found`)
-            err.status = 404
-            throw err
-          }
-          return user._id
-        })
-    })
-    .catch(err => {
-      throw err
     })
 }
 
