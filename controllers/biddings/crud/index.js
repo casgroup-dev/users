@@ -162,19 +162,18 @@ function getCleanAndPopulatedBidding (bidding) {
  */
 function changeIdToEmail (bidding) {
   // TODO: not working, async problem
-  var cleanBiddingUsers = []
   Promise.all(bidding.users.map(async (current, index, users) => {
-    await User.findOne({_id: current.user})
+    return User.findOne({_id: current.user})
       .then(user => {
-        cleanBiddingUsers.push({
+        return {
           'user': user.email,
           'economicalFormAnswers': users[index].economicalFormAnswers
-        })
+        }
       })
   }))
-    .then(() => {
-      logger.info(cleanBiddingUsers)
-      return cleanBiddingUsers
+    .then(values => {
+      logger.info(values)
+      return values
     })
 }
 
@@ -184,7 +183,7 @@ function changeIdToEmail (bidding) {
  * @returns showable
  */
 function checkDeadlines (deadlines) {
-  var stages = {
+  const stages = {
     onQuestions: false,
     onQuestionsAnswers: false,
     onTechnicalReception: false,
@@ -265,19 +264,19 @@ async function filterDataByRole (bidding, role, email) {
  * @param boolDeadlines
  */
 async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
-  var permissions = {
-    'seeParticipants': false,
-    'uploadTecnical': false,
-    'uploadEconomical': false,
-    'reviewTechnical': false,
-    'reviewEconomical': false,
-    'askQuestion': false,
-    'seeQuestions': false,
-    'answerQuestions': false,
-    'seeAnswers': false,
-    'seeNotice': false,
-    'canModify': false,
-    'seeSchedule': true
+  const permissions = {
+    seeParticipants: false,
+    uploadTecnical: false,
+    uploadEconomical: false,
+    reviewTechnical: false,
+    reviewEconomical: false,
+    askQuestion: false,
+    seeQuestions: false,
+    answerQuestions: false,
+    seeAnswers: false,
+    seeNotice: false,
+    canModify: false,
+    seeSchedule: true
   }
   if (role === roles.platform.user || role === roles.platform.companyAdmin) {
     /* permissions */
@@ -288,28 +287,32 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
     permissions.seeNotice = true
 
     /* create */
-    var userBidding = {}
-    userBidding.title = bidding.title
-    userBidding.rules = bidding.rules
-    userBidding.users = bidding.users
-    userBidding.questions = bidding.questions
-    userBidding.deadlines = bidding.deadlines
-    userBidding.permissions = permissions
-    await User.findOne({email: email})
+    const userBidding = {
+      title: bidding.title,
+      rules: bidding.rules,
+      users: bidding.users,
+      questions: bidding.questions,
+      deadlines: bidding.deadlines,
+      permissions: permissions
+    }
+
+    return User.findOne({email: email})
       .then(user => {
-        if (!user) {
+        if (user) {
+          userBidding.users = bidding.users.filter((current) => {
+            return current.user.equals(user._id)
+          })
+          userBidding.questions = bidding.questions.filter((current) => {
+            return current.user.equals(user._id)
+          })
+
+          return userBidding
+        } else {
           return {}
         }
-        userBidding.users = bidding.users.filter((current) => {
-          return current.user.equals(user._id)
-        })
-        userBidding.questions = bidding.questions.filter((current) => {
-          return current.user.equals(user._id)
-        })
       })
-    return userBidding
   } else if (role === roles.platform.shadowUser) {
-    for (let field in bidding) delete bidding[field]
+    return {}
   } else {
     /* permissions */
     permissions.seeParticipants = true
@@ -320,15 +323,15 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
     permissions.canModify = true
 
     /* create */
-    var adminBidding = {}
-    adminBidding.title = bidding.title
-    adminBidding.rules = bidding.rules
-    adminBidding.bidderCompany = bidding.bidderCompany
-    adminBidding.users = bidding.users
-    adminBidding.questions = bidding.questions
-    adminBidding.deadlines = bidding.deadlines
-    adminBidding.permissions = permissions
-    return adminBidding // role === admin sends all info without modification
+    return {
+      title: bidding.title,
+      rules: bidding.rules,
+      bidderCompany: bidding.bidderCompany,
+      users: bidding.users,
+      questions: bidding.questions,
+      deadlines: bidding.deadlines,
+      permissions: permissions
+    } // role === admin sends all info without modification
   }
 }
 
