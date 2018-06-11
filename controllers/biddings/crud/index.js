@@ -73,7 +73,8 @@ const get = {
           .then(async tokenData => {
             var boolDeadlines = checkDeadlines(bidding.deadlines)
             var filteredBidding = await filterIdBiddingByRole(bidding, tokenData.role, tokenData.email, boolDeadlines)
-            // filteredBidding = await changeIdToEmail(filteredBidding)
+            var usersBidding = await changeIdToEmail(filteredBidding)
+            filteredBidding.users = usersBidding
             req.body = filteredBidding
             return next()
           })
@@ -160,11 +161,13 @@ function getCleanAndPopulatedBidding (bidding) {
  * Changes the users list ids for email.
  * @param bidding
  */
-function changeIdToEmail (bidding) {
-  // TODO: not working, async problem
+async function changeIdToEmail (bidding) {
   var cleanBiddingUsers = []
-  Promise.all(bidding.users.map(async (current, index, users) => {
-    await User.findOne({_id: current.user})
+  new Promise((resolve, reject) => {
+    resolve(cleanBiddingUsers)
+  })
+  return Promise.all(bidding.users.map((current, index, users) => {
+    return User.findOne({_id: current.user})
       .then(user => {
         cleanBiddingUsers.push({
           'user': user.email,
@@ -173,8 +176,9 @@ function changeIdToEmail (bidding) {
       })
   }))
     .then(() => {
-      logger.info(cleanBiddingUsers)
-      return cleanBiddingUsers
+      return new Promise((resolve, reject) => {
+        resolve(cleanBiddingUsers)
+      })
     })
 }
 
@@ -294,6 +298,7 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
     userBidding.questions = bidding.questions
     userBidding.deadlines = bidding.deadlines
     userBidding.permissions = permissions
+
     await User.findOne({email: email})
       .then(user => {
         if (!user) {
@@ -327,6 +332,7 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
     adminBidding.questions = bidding.questions
     adminBidding.deadlines = bidding.deadlines
     adminBidding.permissions = permissions
+
     return adminBidding // role === admin sends all info without modification
   }
 }
