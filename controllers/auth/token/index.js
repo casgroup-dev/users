@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken')
 const logger = require('winston-namespace')('auth:token')
-const {Token, roles} = require('../../../models')
+const {Token, User, roles} = require('../../../models')
 
 /**
  * Creates a JSON webtoken (https://www.npmjs.com/package/jsonwebtoken) with the data
@@ -111,9 +111,30 @@ function handleError (err, res, next) {
   next(err)
 }
 
+function getUserId (tkn) {
+  return getData(tkn)
+    .then(tokenData => {
+      return tokenData.email
+    }).then(email => {
+      return User.findOne({email: email})
+        .then(user => {
+          if (!user) {
+            const err = new Error(`Unexpected: User with email '${email}' not found`)
+            err.status = 404
+            throw err
+          }
+          return user._id
+        })
+    })
+    .catch(err => {
+      throw err
+    })
+}
+
 module.exports = {
   create,
   validate,
   getData,
-  handleError
+  handleError,
+  getUserId
 }
