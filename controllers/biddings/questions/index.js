@@ -37,34 +37,10 @@ function update (req, res, next) {
     .catch(err => {
       next(err)
     })
+  next()
 }
 
-/*function update (req, res, next) {
-  Bidding.findOne({_id: req.params.id})
-    .then(bidding => {
-      if (!bidding) {
-        const err = new Error("Can't update. No such bidding")
-        err.status = 404
-        return next(err)
-      }
-      bidding.questions.push({
-        user: getUserIdByToken(req.params.token || req.options.token).then(userId => {
-          return { _id: userId }
-        }),
-        questions: req.body
-      })
-      bidding.save()
-      next()
-    })
-    .catch(err => {
-      logger.error(err)
-      err = new Error('Internal error while updating the bidding data.')
-      err.status = 500
-      return next(err)
-    })
-}*/
-
-// TODO: remove duplicated function
+// TODO: remove this function (duplicated). It should be imported from wherever the original function is.
 function getUserIdByToken (tkn) {
   return token.getData(tkn)
     .then(tokenData => {
