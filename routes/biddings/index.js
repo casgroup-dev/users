@@ -20,6 +20,14 @@ router.put('/:id/questions',
   result.send
 )
 
+router.put('/:id/notices',
+  token.validate,
+  token.validate.roles([roles.platform.admin]),
+  input.validate.notice,
+  notices.update,
+  result.send
+)
+
 router.get('/',
   token.validate,
   bidding.get.all,
@@ -34,7 +42,7 @@ router.get('/:id',
 
 router.put('/:id',
   token.validate,
-  // token.validate.roles([roles.platform.admin]),
+  token.validate.roles([roles.platform.admin]),
   input.validate.update,
   bidding.update,
   result.send
