@@ -58,6 +58,7 @@ const get = {
       })
   },
 
+  //TODO filter to only send a user's data, if you are provider
   /**
    * Given a bidding name in params, return the specific bidding info according to user role requesting it.
    * @param req
@@ -278,7 +279,7 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
     seeQuestions: false,
     answerQuestions: false,
     seeAnswers: false,
-    seeNotice: false,
+    sendNotice: false,
     canModify: false,
     seeSchedule: true
   }
