@@ -365,6 +365,7 @@ function economicalOfferTable (req, res, next) {
 module.exports = {
   create,
   get,
-  update: {update, economicalOfferTable},
+  update,
+  economicalOfferTable,
   remove
 }

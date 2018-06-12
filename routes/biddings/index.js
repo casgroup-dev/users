@@ -55,7 +55,7 @@ router.put('/:id/documents/:type', // Bidding id and type of the document econom
 
 router.put('/:id/documents/table/',
   token.validate,
-  bidding.upload.economicalOfferTable,
+  bidding.economicalOfferTable,
   result.send
 )
 
