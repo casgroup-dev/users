@@ -318,7 +318,7 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
           return {}
         }
       })
-    return userBidding
+    return filterDataByRole(userBidding)
   } else if (role === roles.platform.shadowUser) { return {} }
   else {
     /* permissions */
@@ -348,25 +348,21 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
 
 function economicalOfferTable (req, res, next) {
   token.getUserId(req.params.token || req.options.token)
-    .then(userId => {
-      Bidding.findOne({_id: req.params.id, 'users.user': userId})
-        .then(bidding => {
-          if (!bidding) {
-            const err = new Error('No such bidding')
-            err.status = 404
-            throw err
-          }
-          return bidding
-        })
-        .then(async bidding => {
-          let participant = bidding.users.find((biddingParticipant) => {
-            if (biddingParticipant.user.equals(userId)) { // ObjectID comparision
-              return true
-            }
-          })
-          participant.economicalFormAnswers = req.body
-          next()
-        })
+    .then(async userId => {
+      let bidding = await Bidding.findOne({_id: req.params.id, 'users.user': userId})
+      if (!bidding) {
+        const err = new Error('No such bidding')
+        err.status = 404
+        throw err
+      }
+      let participant = bidding.users.find((biddingParticipant) => {
+        if (biddingParticipant.user.equals(userId)) { // ObjectID comparision
+          return true
+        }
+      })
+      participant.economicalFormAnswers = req.body
+      bidding.save()
+      next()
     })
     .catch(err => {
       next(err)
