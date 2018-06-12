@@ -121,7 +121,7 @@ const Bidding = mongoose.model(BiddingModelName, mongoose.Schema({
       enum: Object.values(roles.bidding)
     },
     approved: {
-      economically: {type: Boolean, default: false},
+      economically: [{type: String}], // Has an array of items' names for which is approved
       technically: {type: Boolean, default: false}
     },
     awarded: {type: Boolean, default: false},
