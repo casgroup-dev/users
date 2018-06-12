@@ -280,7 +280,8 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
     seeAnswers: false,
     seeNotice: false,
     canModify: false,
-    seeSchedule: true
+    seeSchedule: true,
+    seeEconomicalFormSpecs: false
   }
   if (role === roles.platform.user || role === roles.platform.companyAdmin) {
     /* permissions */
@@ -289,6 +290,7 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
     permissions.askQuestion = boolDeadlines.onQuestions
     permissions.seeAnswersQuestion = boolDeadlines.onQuestionsAnswers
     permissions.seeNotice = true
+    permissions.seeEconomicalFormSpecs = true
 
     /* create */
     const userBidding = {
@@ -298,6 +300,7 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
       users: bidding.users,
       questions: bidding.questions,
       deadlines: bidding.deadlines,
+      economicalForm: bidding.economicalForm,
       permissions: permissions
     }
     await User.findOne({email: email})
@@ -331,12 +334,12 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
       id: bidding._id,
       title: bidding.title,
       rules: bidding.rules,
+      economicalForm: bidding.economicalForm,
       bidderCompany: bidding.bidderCompany,
       users: bidding.users,
       questions: bidding.questions,
       deadlines: bidding.deadlines,
       permissions: permissions
-
     }
 
     return adminBidding // role === admin sends all info without modification
