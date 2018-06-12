@@ -1,5 +1,5 @@
 const logger = require('winston-namespace')('bidding:crud')
-const {Bidding, User, roles} = require('../../../models')
+const {Bidding, User, Company, roles} = require('../../../models')
 const {token} = require('../../auth')
 
 /**
@@ -73,7 +73,8 @@ const get = {
           .then(async tokenData => {
             var boolDeadlines = checkDeadlines(bidding.deadlines)
             var filteredBidding = await filterIdBiddingByRole(bidding, tokenData.role, tokenData.email, boolDeadlines)
-            // filteredBidding = await changeIdToEmail(filteredBidding)
+            var usersBidding = await changeIdToEmail(filteredBidding)
+            filteredBidding.users = usersBidding
             req.body = filteredBidding
             return next()
           })
@@ -160,21 +161,32 @@ function getCleanAndPopulatedBidding (bidding) {
  * Changes the users list ids for email.
  * @param bidding
  */
-function changeIdToEmail (bidding) {
-  // TODO: not working, async problem
+async function changeIdToEmail (bidding) {
   var cleanBiddingUsers = []
-  Promise.all(bidding.users.map(async (current, index, users) => {
-    await User.findOne({_id: current.user})
-      .then(user => {
+  new Promise((resolve, reject) => {
+    resolve(cleanBiddingUsers)
+  })
+  return Promise.all(bidding.users.map((current, index, users) => {
+    return User.findOne({_id: current.user})
+      .then(async user => {
         cleanBiddingUsers.push({
           'user': user.email,
-          'economicalFormAnswers': users[index].economicalFormAnswers
+          'economicalFormAnswers': users[index].economicalFormAnswers,
+          'documents': users[index].documents,
+          'role': users[index].role,
+          'phone': user.phone,
+          'name': user.name,
+          'company': await Company.findOne({_id: user.company})
+            .then(company => {
+              return company.businessName
+            })
         })
       })
   }))
     .then(() => {
-      logger.info(cleanBiddingUsers)
-      return cleanBiddingUsers
+      return new Promise((resolve, reject) => {
+        resolve(cleanBiddingUsers)
+      })
     })
 }
 
@@ -288,12 +300,14 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
 
     /* create */
     var userBidding = {}
+    userBidding.id = bidding._id
     userBidding.title = bidding.title
     userBidding.rules = bidding.rules
     userBidding.users = bidding.users
     userBidding.questions = bidding.questions
     userBidding.deadlines = bidding.deadlines
     userBidding.permissions = permissions
+
     await User.findOne({email: email})
       .then(user => {
         if (!user) {
@@ -320,6 +334,7 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
 
     /* create */
     var adminBidding = {}
+    adminBidding.id = bidding._id
     adminBidding.title = bidding.title
     adminBidding.rules = bidding.rules
     adminBidding.bidderCompany = bidding.bidderCompany
@@ -327,6 +342,7 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
     adminBidding.questions = bidding.questions
     adminBidding.deadlines = bidding.deadlines
     adminBidding.permissions = permissions
+
     return adminBidding // role === admin sends all info without modification
   }
 }
