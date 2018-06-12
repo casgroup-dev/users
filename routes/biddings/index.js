@@ -45,17 +45,17 @@ router.put('/:id',
   result.send
 )
 
+router.put('/:id/forms/economical',
+  token.validate,
+  bidding.economicalOfferTable,
+  result.send
+)
+
 /* s3 url should come in body */
 router.put('/:id/documents/:type', // Bidding id and type of the document economical or technical
   token.validate,
   input.validate.fileUrl,
   files.putDocumentUrl,
-  result.send
-)
-
-router.put('/:id/documents/table/',
-  token.validate,
-  bidding.economicalOfferTable,
   result.send
 )
 
