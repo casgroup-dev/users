@@ -300,18 +300,20 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
       deadlines: bidding.deadlines,
       permissions: permissions
     }
-
     await User.findOne({email: email})
       .then(user => {
-        if (!user) {
+        if (user) {
+          userBidding.users = bidding.users.filter((current) => {
+            return current.user.equals(user._id)
+          })
+          userBidding.questions = bidding.questions.filter((current) => {
+            return current.user.equals(user._id)
+          })
+
+          return userBidding
+        } else {
           return {}
         }
-        userBidding.users = bidding.users.filter((current) => {
-          return current.user.equals(user._id)
-        })
-        userBidding.questions = bidding.questions.filter((current) => {
-          return current.user.equals(user._id)
-        })
       })
     return userBidding
   } else if (role === roles.platform.shadowUser) { return {} }
@@ -334,15 +336,44 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
       questions: bidding.questions,
       deadlines: bidding.deadlines,
       permissions: permissions
+
     }
 
     return adminBidding // role === admin sends all info without modification
   }
 }
 
+function economicalOfferTable (req, res, next) {
+  token.getUserId(req.params.token || req.options.token)
+    .then(userId => {
+      Bidding.findOne({_id: req.params.id, 'users.user': userId})
+        .then(bidding => {
+          if (!bidding) {
+            const err = new Error('No such bidding')
+            err.status = 404
+            throw err
+          }
+          return bidding
+        })
+        .then(async bidding => {
+          let participant = bidding.users.find((biddingParticipant) => {
+            if (biddingParticipant.user.equals(userId)) { // ObjectID comparision
+              return true
+            }
+          })
+          participant.economicalFormAnswers = req.body
+          next()
+        })
+    })
+    .catch(err => {
+      next(err)
+    })
+}
+
 module.exports = {
   create,
   get,
   update,
+  economicalOfferTable,
   remove
 }

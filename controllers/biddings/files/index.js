@@ -1,6 +1,7 @@
 const logger = require('winston-namespace')('bidding:files')
 const {Bidding, User, roles} = require('../../../models')
 const {token} = require('../../auth')
+const {s3} = require('../../../services/aws')
 
 /**
  * Put a technical offer. Body request should have the following format:
@@ -14,7 +15,7 @@ const {token} = require('../../auth')
 function putDocumentUrl (req, res, next) {
   // Get user email from token
 
-  getUserIdByToken(req.params.token || req.options.token)
+  token.getUserId(req.params.token || req.options.token)
     .then(userId => {
       Bidding.findOne({_id: req.params.id, 'users.user': userId})
         .then(bidding => {
@@ -59,7 +60,7 @@ function putDocumentUrl (req, res, next) {
 
 const get = {
   myFiles: (req, res, next) => {
-    getUserIdByToken(req.params.token || req.options.token)
+    token.getUserId(req.params.token || req.options.token)
       .then(userId => {
         Bidding.findOne({_id: req.params.id, 'users.user': userId})
           .then(bidding => {
@@ -132,7 +133,7 @@ function remove (req, res, next) {
     next(err)
   }
 
-  getUserIdByToken(req.params.token || req.options.token)
+  token.getUserId(req.params.token || req.options.token)
     .then(userId => {
       Bidding.findOne({_id: req.params.id, 'users.user': userId})
         .then(bidding => {
@@ -150,46 +151,38 @@ function remove (req, res, next) {
             }
           })
 
+          let index
+          let documentsArray
+
           switch (req.params.type) {
             case 'technical':
-              participant.documents.technicals.splice(
-                indexOfObject(participant.documents.technicals, 'name', req.query.name), 1)
+              documentsArray = participant.documents.technicals
               break
             case 'economical':
-              participant.documents.economicals.splice(
-                indexOfObject(participant.documents.economicals, 'name', req.query.name), 1)
+              documentsArray = participant.documents.economicals
               break
             default:
               const err = new Error(`Invalid type: '${req.params.type}'. Allowed types are 'economical' and 'technical'`)
               err.code = 400
               throw err
           }
+
+          index = indexOfObject(documentsArray, 'name', req.query.name)
+          try {
+            deleteFromS3(documentsArray[index].url) // If this throws an error it would be caught below
+            documentsArray.splice(index, 1)
+          } catch (err) {
+            logger.error(err)
+            err.message = `There was a problem when deleting file '${documentsArray[index].name}'. Please read backend logs`
+            throw err
+          }
+
           bidding.save()
           next()
         })
     })
     .catch(err => {
       next(err)
-    })
-}
-
-function getUserIdByToken (tkn) {
-  return token.getData(tkn)
-    .then(tokenData => {
-      return tokenData.email
-    }).then(email => {
-      return User.findOne({email: email})
-        .then(user => {
-          if (!user) {
-            const err = new Error(`Unexpected: User with email '${email}' not found`)
-            err.status = 404
-            throw err
-          }
-          return user._id
-        })
-    })
-    .catch(err => {
-      throw err
     })
 }
 
@@ -206,6 +199,21 @@ function indexOfObject (array, field, value) {
       return idx
     }
   }
+}
+
+function deleteFromS3 (url) {
+  // Parse url to get the key
+  const urlPrefix = `https://${process.env.S3_BUCKET_NAME}.s3.amazonaws.com/`
+  const key = url.slice(urlPrefix.length)
+  const params = {
+    Bucket: process.env.S3_BUCKET_NAME,
+    Key: key
+  }
+  // logger.info(key)
+  s3.deleteObject(params, (err, data) => {
+    if (err) throw err
+    else { logger.info(`Successfully deleted '${key}'`) }
+  })
 }
 
 module.exports = {
