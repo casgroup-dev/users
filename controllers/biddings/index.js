@@ -1,5 +1,6 @@
 const bidding = require('./crud')
 const files = require('./files')
+const notices = require('./notices')
 const {Bidding, User, roles} = require('../../models')
 const logger = require('winston-namespace')('bidding')
 
@@ -78,6 +79,21 @@ const input = {
       next()
     },
 
+    /**
+     * Validates that a notice isn't empty.
+     * @param req
+     * @param res
+     * @param next
+     */
+    notices: (req, res, next) => {
+      if (!req.body.noticeText) {
+        const err = new Error('Notice field is empty')
+        err.code = 400
+        logger.error(err)
+        return next(err)
+      }
+    },
+
     fileUrl: (req, res, next) => {
       /* https://stackoverflow.com/questions/26726862/how-to-determine-if-object-exists-aws-s3-node-js-sdk
       *  Should verify url is valid, i.e, file has been uploaded. Why this could be important (or even critical)?
@@ -151,5 +167,6 @@ function validateBiddingUsers (users) {
 module.exports = {
   bidding,
   files,
-  input
+  input,
+  notices
 }

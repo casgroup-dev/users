@@ -145,6 +145,10 @@ const Bidding = mongoose.model(BiddingModelName, mongoose.Schema({
     question: {type: String, required: true},
     answer: String
   }],
+  notices: [{
+    noticeText: {type: String, required: true},
+    noticeDate: {type: Date, required: true}
+  }],
   deadlines: { // Deadlines for this bidding
     questions: {start: Date, end: Date}, // Questions of the providers
     questionsAnswers: {start: Date, end: Date}, // Answers to the questions
