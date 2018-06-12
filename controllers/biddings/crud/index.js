@@ -154,6 +154,8 @@ function getCleanAndPopulatedBidding (bidding) {
     })
 }
 
+
+// TODO: send only the user's data when is not an Admin
 /**
  * Changes the users list ids for email.
  * @param bidding
@@ -289,7 +291,7 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
     permissions.uploadEconomical = boolDeadlines.onEconomicalReception
     permissions.askQuestion = boolDeadlines.onQuestions
     permissions.seeAnswersQuestion = boolDeadlines.onQuestionsAnswers
-    permissions.seeNotice = true
+    permissions.sendNotice = true
 
     /* create */
     const userBidding = {
