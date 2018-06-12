@@ -1,5 +1,5 @@
 const logger = require('winston-namespace')('bidding:crud')
-const {Bidding, User, roles} = require('../../../models')
+const {Bidding, User, Company, roles} = require('../../../models')
 const {token} = require('../../auth')
 
 /**
@@ -168,10 +168,18 @@ async function changeIdToEmail (bidding) {
   })
   return Promise.all(bidding.users.map((current, index, users) => {
     return User.findOne({_id: current.user})
-      .then(user => {
+      .then(async user => {
         cleanBiddingUsers.push({
           'user': user.email,
-          'economicalFormAnswers': users[index].economicalFormAnswers
+          'economicalFormAnswers': users[index].economicalFormAnswers,
+          'documents': users[index].documents,
+          'role': users[index].role,
+          'phone': user.phone,
+          'name': user.name,
+          'company': await Company.findOne({_id: user.company})
+            .then(company => {
+              return company.businessName
+            })
         })
       })
   }))
@@ -292,6 +300,7 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
 
     /* create */
     var userBidding = {}
+    userBidding.id = bidding._id
     userBidding.title = bidding.title
     userBidding.rules = bidding.rules
     userBidding.users = bidding.users
@@ -325,6 +334,7 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
 
     /* create */
     var adminBidding = {}
+    adminBidding.id = bidding._id
     adminBidding.title = bidding.title
     adminBidding.rules = bidding.rules
     adminBidding.bidderCompany = bidding.bidderCompany
