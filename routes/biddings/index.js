@@ -23,6 +23,7 @@ router.put('/:id/questions',
 router.put('/:id/notices',
   token.validate,
   token.validate.roles([roles.platform.admin]),
+  // TODO: engineers can post notices too
   input.validate.notice,
   notices.update,
   result.send
