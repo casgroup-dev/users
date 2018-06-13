@@ -1,5 +1,6 @@
 const bidding = require('./crud')
 const questions = require('./questions')
+const files = require('./files')
 const {Bidding, User, roles} = require('../../models')
 const logger = require('winston-namespace')('bidding')
 
@@ -24,6 +25,7 @@ const input = {
      * @param {Function} next
      */
     creation: (req, res, next) => {
+      console.log(req.body)
       // logger.info(req.body)
       if (!req.body) {
         const err = new Error('No body')
@@ -31,8 +33,8 @@ const input = {
         logger.error(err)
         return next(err)
       }
-      if (!req.body.name || !req.body.bidderCompany) {
-        const err = new Error('No bidding name or bidder company')
+      if (!req.body.title || !req.body.bidderCompany || !req.body.biddingType) {
+        const err = new Error('No bidding title, bidder company or bidding type')
         err.code = 400
         logger.error(err)
         return next(err)
@@ -93,6 +95,28 @@ const input = {
         next(err)
       }
       next()
+    },
+
+    fileUrl: (req, res, next) => {
+      /* https://stackoverflow.com/questions/26726862/how-to-determine-if-object-exists-aws-s3-node-js-sdk
+      *  Should verify url is valid, i.e, file has been uploaded. Why this could be important (or even critical)?
+      *  It's suppose that the frontend gives s3 url to backend. So, what happens if someone intercepts that url and
+      *  replaces it by a malicious one? Above link maybe can give us a way to check that.
+      */
+      if (!req.body.hasOwnProperty('url') && !req.body.hasOwnProperty('name')) {
+        const err = new Error(`No url or name provided '${req.body}'.`)
+        err.status = 400
+        next(err)
+      }
+
+      if (req.params.type !== 'economical' && req.params.type !== 'technical') {
+        const err = new Error(`Invalid document type: '${req.params.type}'.
+             Allowed types are 'economical' and 'technical'`)
+        err.status = 400
+        next(err)
+      }
+      // Puts a name for default. TODO: Consult this
+      next()
     }
   }
 }
@@ -146,5 +170,6 @@ function validateBiddingUsers (users) {
 module.exports = {
   input,
   bidding,
-  questions
+  questions,
+  files
 }
