@@ -1,5 +1,5 @@
-const {Bidding, User} = require('../../../models')
-const {token} = require('../../auth')
+const {Bidding} = require('../../../models')
+const {getUserId} = require('../../auth/token')
 
 /**
  * Updates a bidding with the data coming from the body of the request.
@@ -9,12 +9,11 @@ const {token} = require('../../auth')
  */
 
 function update (req, res, next) {
-  getUserIdByToken(req.params.token || req.options.token)
+  getUserId(req.params.token || req.options.token)
     .then(userId => {
       Bidding.findOne({_id: req.params.id, 'users.user': userId})
         .then(bidding => {
           if (!bidding) {
-            console.log('no encuentra la bidding')
             const err = new Error('No such bidding')
             err.status = 404
             throw err
@@ -22,7 +21,6 @@ function update (req, res, next) {
           return bidding
         })
         .then(bidding => {
-          console.log('encuentra la bidding')
           bidding.questions.push({
             user: userId,
             question: req.body.question
@@ -37,27 +35,6 @@ function update (req, res, next) {
       next(err)
     })
   next()
-}
-
-// TODO: remove this function (duplicated). It should be imported from wherever the original function is.
-function getUserIdByToken (tkn) {
-  return token.getData(tkn)
-    .then(tokenData => {
-      return tokenData.email
-    }).then(email => {
-      return User.findOne({email: email})
-        .then(user => {
-          if (!user) {
-            const err = new Error(`Unexpected: User with email '${email}' not found`)
-            err.status = 404
-            throw err
-          }
-          return user._id
-        })
-    })
-    .catch(err => {
-      throw err
-    })
 }
 
 module.exports = {

@@ -86,10 +86,8 @@ const input = {
      * @param next
      */
     question: (req, res, next) => {
-      console.log(req.body)
       if (!req.body.question) {
         const err = new Error('Question field is empty')
-        console.log('entra a question')
         err.code = 400
         logger.error(err)
         next(err)
