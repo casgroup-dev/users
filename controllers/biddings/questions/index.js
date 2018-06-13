@@ -1,4 +1,3 @@
-const logger = require('winston-namespace')('bidding:questions')
 const {Bidding, User} = require('../../../models')
 const {token} = require('../../auth')
 

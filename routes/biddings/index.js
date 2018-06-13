@@ -14,7 +14,7 @@ router.post('/',
 
 router.put('/:id/questions',
   token.validate,
-  token.validate.roles([roles.platform.user]),
+  // token.validate.roles([roles.platform.user]),
   input.validate.question,
   questions.update,
   result.send
@@ -34,7 +34,7 @@ router.get('/:id',
 
 router.put('/:id',
   token.validate,
-  // token.validate.roles([roles.platform.admin]),
+  token.validate.roles([roles.platform.admin]),
   input.validate.update,
   bidding.update,
   result.send
