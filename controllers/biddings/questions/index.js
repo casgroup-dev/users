@@ -1,5 +1,5 @@
 const {Bidding} = require('../../../models')
-const {getUserIdByToken} = require('../../utils')
+const {getUserId} = require('../../auth/token')
 
 /**
  * Updates a bidding with the data coming from the body of the request.
@@ -9,12 +9,11 @@ const {getUserIdByToken} = require('../../utils')
  */
 
 function update (req, res, next) {
-  getUserIdByToken(req.params.token || req.options.token)
+  getUserId(req.params.token || req.options.token)
     .then(userId => {
       Bidding.findOne({_id: req.params.id, 'users.user': userId})
         .then(bidding => {
           if (!bidding) {
-            console.log('no encuentra la bidding')
             const err = new Error('No such bidding')
             err.status = 404
             throw err
@@ -22,7 +21,6 @@ function update (req, res, next) {
           return bidding
         })
         .then(bidding => {
-          console.log('encuentra la bidding')
           bidding.questions.push({
             user: userId,
             question: req.body.question

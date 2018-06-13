@@ -1,9 +1,8 @@
 const router = require('express').Router()
-
 const {roles} = require('../../models')
 const {token} = require('../../controllers/auth')
 const {result} = require('../../controllers/utils')
-const {input, bidding, questions, notices, files} = require('../../controllers/biddings')
+const {input, bidding, files, questions, notices} = require('../../controllers/biddings')
 
 router.post('/',
   token.validate,
@@ -15,7 +14,7 @@ router.post('/',
 
 router.put('/:id/questions',
   token.validate,
-  token.validate.roles([roles.platform.user]),
+  // token.validate.roles([roles.platform.user]),
   input.validate.question,
   questions.update,
   result.send
@@ -62,17 +61,17 @@ router.put('/:id',
   result.send
 )
 
+router.put('/:id/forms/economical',
+  token.validate,
+  bidding.economicalOfferTable,
+  result.send
+)
+
 /* s3 url should come in body */
 router.put('/:id/documents/:type', // Bidding id and type of the document economical or technical
   token.validate,
   input.validate.fileUrl,
   files.putDocumentUrl,
-  result.send
-)
-
-router.put('/:id/documents/table/',
-  token.validate,
-  bidding.upload.economicalOfferTable,
   result.send
 )
 

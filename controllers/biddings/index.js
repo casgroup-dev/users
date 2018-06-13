@@ -1,6 +1,9 @@
 const bidding = require('./crud')
 const questions = require('./questions')
+<<<<<<< HEAD
 const notices = require('./notices')
+=======
+>>>>>>> send-questions
 const files = require('./files')
 const {Bidding, User, roles} = require('../../models')
 const logger = require('winston-namespace')('bidding')
@@ -87,7 +90,6 @@ const input = {
      * @param next
      */
     question: (req, res, next) => {
-      console.log(req.body)
       if (!req.body.question) {
         const err = new Error('Question field is empty')
         err.code = 400
