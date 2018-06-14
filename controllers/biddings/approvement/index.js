@@ -19,8 +19,8 @@ async function approve (biddingId, type, businessNames, itemName) {
     err.status = 400
     throw err
   }
-  if (!businessNames || !businessNames.length) {
-    const err = new Error('The body of the request must have an array of strings with the business names of the approved companies.')
+  if (!businessNames) {
+    const err = new Error('The business names must be an array.')
     err.status = 400
     throw err
   }
