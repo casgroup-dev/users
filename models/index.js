@@ -121,7 +121,6 @@ const Bidding = mongoose.model(BiddingModelName, mongoose.Schema({
       enum: Object.values(roles.bidding)
     },
     approved: {
-      economically: [{itemName: String, comment: String}], // Has an array of items' names for which is approved and its correspondent comment
       technically: {type: Boolean, default: false}
     },
     awarded: {type: Boolean, default: false},
@@ -143,7 +142,10 @@ const Bidding = mongoose.model(BiddingModelName, mongoose.Schema({
     economicalFormAnswers: [{
       itemName: String,
       specifications: String,
-      costPerUnit: Number
+      costPerUnit: Number,
+      // Only the admin can change these
+      adjudicated: Boolean,
+      adminComment: String
     }]
   }],
   questions: [{
