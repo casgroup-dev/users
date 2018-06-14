@@ -9,18 +9,32 @@ const {token} = require('../../auth')
  * @param {Object} res
  * @param {Function} next
  */
-// TODO Add engineer
-function create (req, res, next) {
-  req.body.bidding.save()
-    .then(bidding => {
-      req.body = bidding
-      next()
+// TODO Fix duplication error
+async function create (req, res, next) {
+  let newBidding = req.body.bidding
+  token.getData(req.options.token || req.params.token)
+    .then(token => {
+      User.findOne({'email': token.email})
+        .then(user => {
+          newBidding.users.push({
+            user: user,
+            role: 'engineer'
+          })
+        })
     })
-    .catch(err => {
-      logger.error(err)
-      err = new Error('Internal error while storing the new bidding instance.')
-      err.status = 500
-      next(err)
+    .then(() => {
+      newBidding.save()
+        .then(bidding => {
+          console.log(bidding)
+          req.body = bidding
+          next()
+        })
+        .catch(err => {
+          logger.error(err)
+          err = new Error('Internal error while storing the new bidding instance.')
+          err.status = 500
+          next(err)
+        })
     })
 }
 
