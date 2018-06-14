@@ -1,30 +1,14 @@
 const logger = require('winston-namespace')('bidding:approvement')
 const {Bidding} = require('../../../models')
 
-const types = {economically: 'economically', technically: 'technically'}
-
 /**
- * Given an array of the business names, approve all the users of that business in the bidding.
- * So, in simple words, if the user is in the approved company it has the flag 'approved[type] = true'.
- * If the user is not in the businessNames it is set to false.
- * @param {String} biddingId - Identifier of the bidding.
- * @param {String} type - Type of the approvement. Must be 'economically', 'technically'.
- * @param {String[]} businessNames - Array with strings of businessNames.
- * @param {String} [itemName] - Name of the item for which the provider is approved.
- * @returns {Promise<void>}
+ * Finds a bidding by its id.
+ * @param {Object} req - Request object.
+ * @returns {Promise<Bidding>}
  */
-async function approve (biddingId, type, businessNames, itemName) {
-  if (type !== types.economically && type !== types.technically) {
-    const err = new Error(`Incorrect type: ${type}. Must be 'economically' or 'technically'.`)
-    err.status = 400
-    throw err
-  }
-  if (!businessNames) {
-    const err = new Error('The business names must be an array.')
-    err.status = 400
-    throw err
-  }
-  Bidding.findOne({_id: biddingId})
+function findBidding (req) {
+  let biddingId = req.params.id
+  return Bidding.findOne({_id: biddingId})
     .populate({path: 'users.user', populate: {path: 'company'}}) // Populate users and the users' companies
     .then(bidding => {
       if (!bidding) {
@@ -32,38 +16,95 @@ async function approve (biddingId, type, businessNames, itemName) {
         err.status = 404
         throw err
       }
-      for (let participant of bidding.users) {
-        let participantBusinessName = participant.user.company.businessName
-        // If the participant's business name is in the array of the request
-        if (businessNames.indexOf(participantBusinessName) !== -1) {
-          // Approve technically: set flag to true
-          if (type === types.technically) participant.approved.technically = true
-          // Approve economically: push the item for which the participant's company was approved
-          else if (type === types.economically) participant.approved.economically.push(itemName)
-        } else {
-          // If the participant's business name is not in the request: set flag to false
-          if (type === types.technically) participant.approved.technically = false
-          // If the approvement is economically and the participant's business name is not in the request we
-          // must check if the participant had the itemName and remove it
-          else if (type === types.economically) {
-            let indexOfItemName = participant.approved.economically.indexOf(itemName)
-            if (indexOfItemName !== -1) {
-              participant.approved.economically.splice(indexOfItemName, 1)
-            }
-          }
-        }
-      }
-      bidding.save()
-    })
-    .catch(err => {
-      logger.error(err)
-      err = new Error('Error while retrieving the bidding from DB.')
-      err.status = 500
-      throw err
+      return bidding
     })
 }
 
+/**
+ * Approve technically (set approve.technically flag to true) for each one of the user that has its company's
+ * business name in the array coming in the request's body. If the participant's company is not in the array set
+ * flag to false.
+ * @param {Object} req - Request object.
+ * @param {Object} res - Response object.
+ * @param {Function} next - Callback function to pass to the next middleware.
+ */
+function approveTechnically (req, res, next) {
+  // Check if there is the array with business names (possibly empty)
+  let businessNames = req.body
+  if (!businessNames) {
+    const err = new Error('There are no businessNames in the request.')
+    err.status = 400
+    throw err
+  }
+  // Find bidding and process approvement
+  findBidding(req).then(bidding => {
+    bidding.users.forEach(participant => {
+      // If the participant's business name is in the array of the request set flag to true, otherwise, se to false
+      participant.approved.technically = businessNames.indexOf(participant.user.company.businessName) !== -1
+    })
+    // Save changes
+    bidding.save()
+    req.body = {} // Set to empty json to not send anything to the front
+    next()
+  }).catch(err => {
+    logger.error(err)
+    err = new Error('Error while retrieving the bidding from DB.')
+    err.status = 500
+    next(err)
+  })
+}
+
+/**
+ * Receive an object as:
+ * {itemName: String, adjudications: [{adjudicated: Boolean, comment: String, provider: String}, ...]}
+ * The provider string is the businessName of the company approved.
+ * If there is the case that the user has an item for which was approved but in this request it does not appear,
+ * this middleware will delete the old adjudicated item.
+ * @param {Object} req - Request object.
+ * @param {Object} res - Response object.
+ * @param {Function} next - Callback function to pass to the next middleware.
+ */
+function approveEconomically (req, res, next) {
+  const throwError = (msg, status) => {
+    const err = new Error(msg)
+    err.status = status || 400
+    next(err)
+  }
+  let itemName = req.body.itemName
+  let adjudications = req.body.adjudications
+  if (!itemName) return throwError(`There is no 'itemName' property in the request.`)
+  if (!adjudications) return throwError(`There is no 'adjudications' property in the request.`)
+  findBidding(req).then(bidding => {
+    bidding.users.forEach(participant => {
+      let adjudicatedItems = participant.approved.economically
+      // Check if the participant has already adjudicated this item
+      let indexOfItem = adjudicatedItems.find(itemWithComment => itemWithComment.itemName === itemName)
+      // Check if the user's company is in the incoming request's providers
+      let adjudication = adjudications.find(adjudication => adjudication.provider === participant.user.company.businessName)
+      if (adjudication) {
+        if (indexOfItem !== -1) {
+          // If the user already has adjudicated the item change the comment
+          adjudicatedItems[indexOfItem].comment = adjudication.comment
+        } else {
+          // If not, push the new item
+          adjudicatedItems.push({itemName, comment: adjudication.comment})
+        }
+      } else if (indexOfItem !== -1) {
+        // If there is no adjudication for this user and there is an old adjudicated item, remove it
+        adjudicatedItems.splice(indexOfItem, 1)
+      }
+      // If the user does not adjudicated anything and it does not have the item adjudicated in an old request, do nothing
+    })
+    bidding.save()
+    req.body = {} // Set empty json to not send anything to the front
+    next()
+  }).catch(err => {
+    logger.error(err)
+    throwError(`Internal error while retrieving the bidding from the DB.`, 500)
+  })
+}
+
 module.exports = {
-  economically: (req, res, next) => approve(req.params.id, types.economically, req.body.businessNames, req.body.itemName).then(next).catch(next),
-  technically: (req, res, next) => approve(req.params.id, types.technically, req.body).then(next).catch(next)
+  economically: approveEconomically,
+  technically: approveTechnically
 }
