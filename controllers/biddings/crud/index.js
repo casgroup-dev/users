@@ -68,6 +68,7 @@ const get = {
    */
   byId: (req, res, next) => {
     Bidding.findOne({_id: req.params.id})
+      .populate({path: 'users.user', populate: {path: 'company'}})
       .then(async bidding => {
         if (!bidding) {
           const err = new Error('No bidding found')
@@ -77,10 +78,9 @@ const get = {
         return {bidding, tokenData: token.getData(req.options.token)}
       })
       .then(async ({bidding, tokenData}) => {
+        console.log(JSON.stringify(bidding, null, 2))
         const boolDeadlines = checkDeadlines(bidding.deadlines)
         const filteredBidding = await filterIdBiddingByRole(bidding, tokenData.role, tokenData.email, boolDeadlines)
-        const usersBidding = await changeIdToEmail(filteredBidding)
-        filteredBidding.users = usersBidding
         req.body = filteredBidding
         next()
       })
@@ -155,7 +155,6 @@ function getCleanAndPopulatedBidding (bidding) {
     })
 }
 
-
 // TODO: send only the user's data when is not an Admin
 /**
  * Changes the users list ids for email.
@@ -206,17 +205,13 @@ function checkDeadlines (deadlines) {
     currentDate < deadlines.questions.end) {
     stages.onQuestions = true
   }
-  if (currentDate > deadlines.questionsAnswers.start &&
-    currentDate < deadlines.questionsAnswers.end) {
+  if (currentDate > deadlines.answers.start &&
+    currentDate < deadlines.answers.end) {
     stages.onQuestionsAnswers = true
   }
-  if (currentDate > deadlines.technicalReception.start &&
-    currentDate < deadlines.technicalReception.end) {
-    stages.onTechnicalReception = true
-  }
-  if (currentDate > deadlines.economicalReception.start &&
-    currentDate < deadlines.economicalReception.end) {
-    stages.onEconomicalReception = true
+  if (currentDate > deadlines.reception.start &&
+    currentDate < deadlines.reception.end) {
+    stages.onReception = true
   }
   if (currentDate > deadlines.technicalEvaluation.start &&
     currentDate < deadlines.technicalEvaluation.end) {
@@ -288,8 +283,8 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
   }
   if (role === roles.platform.user || role === roles.platform.companyAdmin) {
     /* permissions */
-    permissions.uploadTechnical = boolDeadlines.onTechnicalReception
-    permissions.uploadEconomical = boolDeadlines.onEconomicalReception
+    permissions.uploadTechnical = boolDeadlines.onReception
+    permissions.uploadEconomical = boolDeadlines.onReception
     permissions.askQuestion = boolDeadlines.onQuestions
     permissions.seeAnswersQuestion = boolDeadlines.onQuestionsAnswers
     permissions.sendNotice = true
