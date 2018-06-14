@@ -78,7 +78,6 @@ const get = {
         return {bidding, tokenData: token.getData(req.options.token)}
       })
       .then(async ({bidding, tokenData}) => {
-        console.log(JSON.stringify(bidding, null, 2))
         const boolDeadlines = checkDeadlines(bidding.deadlines)
         const filteredBidding = await filterIdBiddingByRole(bidding, tokenData.role, tokenData.email, boolDeadlines)
         req.body = filteredBidding
@@ -152,35 +151,6 @@ function getCleanAndPopulatedBidding (bidding) {
   }))
     .then(() => {
       return bidding
-    })
-}
-
-// TODO: send only the user's data when is not an Admin
-/**
- * Changes the users list ids for email.
- * @param bidding
- */
-async function changeIdToEmail (bidding) {
-  const cleanBiddingUsers = []
-  return Promise.all(bidding.users.map((current, index, users) => {
-    return User.findOne({_id: current.user})
-      .then(async user => {
-        cleanBiddingUsers.push({
-          'user': user.email,
-          'economicalFormAnswers': users[index].economicalFormAnswers,
-          'documents': users[index].documents,
-          'role': users[index].role,
-          'phone': user.phone,
-          'name': user.name,
-          'company': await Company.findOne({_id: user.company})
-            .then(company => {
-              return company.businessName
-            })
-        })
-      })
-  }))
-    .then(() => {
-      return cleanBiddingUsers
     })
 }
 
