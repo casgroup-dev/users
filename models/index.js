@@ -120,16 +120,22 @@ const Bidding = mongoose.model(BiddingModelName, mongoose.Schema({
       default: roles.bidding.provider,
       enum: Object.values(roles.bidding)
     },
+    approved: {
+      economically: [{itemName: String, comment: String}], // Has an array of items' names for which is approved and its correspondent comment
+      technically: {type: Boolean, default: false}
+    },
+    awarded: {type: Boolean, default: false},
+    awardComment: {type: String},
     // Only providers upload this documents
     documents: {
       economicals: [{
-        name: {type: String, unique: true},
-        url: {type: String, unique: true},
+        name: {type: String},
+        url: {type: String},
         date: {type: Date, default: Date.now}
       }],
       technicals: [{
-        name: {type: String, unique: true},
-        url: {type: String, unique: true},
+        name: {type: String},
+        url: {type: String},
         date: {type: Date, default: Date.now}
       }]
     },

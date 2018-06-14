@@ -249,7 +249,8 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
     seeAnswers: false,
     sendNotice: false,
     canModify: false,
-    seeSchedule: true
+    seeSchedule: true,
+    seeEconomicalFormSpecs: false
   }
   if (role === roles.platform.user || role === roles.platform.companyAdmin) {
     /* permissions */
@@ -267,6 +268,7 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
       users: bidding.users,
       questions: bidding.questions,
       deadlines: bidding.deadlines,
+      economicalForm: bidding.economicalForm,
       permissions: permissions
     }
     await User.findOne({email: email})
@@ -300,12 +302,12 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
       id: bidding._id,
       title: bidding.title,
       rules: bidding.rules,
+      economicalForm: bidding.economicalForm,
       bidderCompany: bidding.bidderCompany,
       users: bidding.users,
       questions: bidding.questions,
       deadlines: bidding.deadlines,
       permissions: permissions
-
     }
 
     return adminBidding // role === admin sends all info without modification
@@ -314,25 +316,21 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
 
 function economicalOfferTable (req, res, next) {
   token.getUserId(req.params.token || req.options.token)
-    .then(userId => {
-      Bidding.findOne({_id: req.params.id, 'users.user': userId})
-        .then(bidding => {
-          if (!bidding) {
-            const err = new Error('No such bidding')
-            err.status = 404
-            throw err
-          }
-          return bidding
-        })
-        .then(async bidding => {
-          let participant = bidding.users.find((biddingParticipant) => {
-            if (biddingParticipant.user.equals(userId)) { // ObjectID comparision
-              return true
-            }
-          })
-          participant.economicalFormAnswers = req.body
-          next()
-        })
+    .then(async userId => {
+      let bidding = await Bidding.findOne({_id: req.params.id, 'users.user': userId})
+      if (!bidding) {
+        const err = new Error('No such bidding')
+        err.status = 404
+        throw err
+      }
+      let participant = bidding.users.find((biddingParticipant) => {
+        if (biddingParticipant.user.equals(userId)) { // ObjectID comparision
+          return true
+        }
+      })
+      participant.economicalFormAnswers = req.body
+      bidding.save()
+      next()
     })
     .catch(err => {
       next(err)

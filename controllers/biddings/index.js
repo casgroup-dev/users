@@ -1,3 +1,4 @@
+const approve = require('./approvement')
 const bidding = require('./crud')
 const files = require('./files')
 const {Bidding, User, roles} = require('../../models')
@@ -149,6 +150,7 @@ function validateBiddingUsers (users) {
 }
 
 module.exports = {
+  approve,
   bidding,
   files,
   input
