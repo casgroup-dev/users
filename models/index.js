@@ -125,7 +125,7 @@ const Bidding = mongoose.model(BiddingModelName, mongoose.Schema({
       technically: {type: Boolean, default: false}
     },
     awarded: {type: Boolean, default: false},
-    awardComment: {type: String},
+    awardComment: {type: String}, // If it has any general message, for example if no body won
     // Only providers upload this documents
     documents: {
       economicals: [{

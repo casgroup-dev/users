@@ -56,7 +56,7 @@ function approveTechnically (req, res, next) {
 
 /**
  * Receive an object as:
- * {itemName: String, adjudications: [{adjudicated: Boolean, comment: String, provider: String}, ...]}
+ * {itemName: String, adjudications: [{comment: String, provider: String}, ...]}
  * The provider string is the businessName of the company approved.
  * If there is the case that the user has an item for which was approved but in this request it does not appear,
  * this middleware will delete the old adjudicated item.
@@ -78,7 +78,7 @@ function approveEconomically (req, res, next) {
     bidding.users.forEach(participant => {
       let adjudicatedItems = participant.approved.economically
       // Check if the participant has already adjudicated this item
-      let indexOfItem = adjudicatedItems.find(itemWithComment => itemWithComment.itemName === itemName)
+      let indexOfItem = adjudicatedItems.findIndex(itemWithComment => itemWithComment.itemName === itemName)
       // Check if the user's company is in the incoming request's providers
       let adjudication = adjudications.find(adjudication => adjudication.provider === participant.user.company.businessName)
       if (adjudication) {
