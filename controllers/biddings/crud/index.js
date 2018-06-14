@@ -9,6 +9,7 @@ const {token} = require('../../auth')
  * @param {Object} res
  * @param {Function} next
  */
+// TODO Add engineer
 function create (req, res, next) {
   req.body.bidding.save()
     .then(bidding => {
@@ -58,6 +59,7 @@ const get = {
       })
   },
 
+  //TODO filter to only send a user's data, if you are provider
   /**
    * Given a bidding name in params, return the specific bidding info according to user role requesting it.
    * @param req
@@ -66,6 +68,7 @@ const get = {
    */
   byId: (req, res, next) => {
     Bidding.findOne({_id: req.params.id})
+      .populate({path: 'users.user', populate: {path: 'company'}})
       .then(async bidding => {
         if (!bidding) {
           const err = new Error('No bidding found')
@@ -77,8 +80,6 @@ const get = {
       .then(async ({bidding, tokenData}) => {
         const boolDeadlines = checkDeadlines(bidding.deadlines)
         const filteredBidding = await filterIdBiddingByRole(bidding, tokenData.role, tokenData.email, boolDeadlines)
-        const usersBidding = await changeIdToEmail(filteredBidding)
-        filteredBidding.users = usersBidding
         req.body = filteredBidding
         next()
       })
@@ -153,6 +154,7 @@ function getCleanAndPopulatedBidding (bidding) {
     })
 }
 
+// TODO: send only the user's data when is not an Admin
 /**
  * Changes the users list ids for email.
  * @param bidding
@@ -202,17 +204,13 @@ function checkDeadlines (deadlines) {
     currentDate < deadlines.questions.end) {
     stages.onQuestions = true
   }
-  if (currentDate > deadlines.questionsAnswers.start &&
-    currentDate < deadlines.questionsAnswers.end) {
+  if (currentDate > deadlines.answers.start &&
+    currentDate < deadlines.answers.end) {
     stages.onQuestionsAnswers = true
   }
-  if (currentDate > deadlines.technicalReception.start &&
-    currentDate < deadlines.technicalReception.end) {
-    stages.onTechnicalReception = true
-  }
-  if (currentDate > deadlines.economicalReception.start &&
-    currentDate < deadlines.economicalReception.end) {
-    stages.onEconomicalReception = true
+  if (currentDate > deadlines.reception.start &&
+    currentDate < deadlines.reception.end) {
+    stages.onReception = true
   }
   if (currentDate > deadlines.technicalEvaluation.start &&
     currentDate < deadlines.technicalEvaluation.end) {
@@ -278,19 +276,18 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
     seeQuestions: false,
     answerQuestions: false,
     seeAnswers: false,
-    seeNotice: false,
+    sendNotice: false,
     canModify: false,
     seeSchedule: true,
     seeEconomicalFormSpecs: false
   }
   if (role === roles.platform.user || role === roles.platform.companyAdmin) {
     /* permissions */
-    permissions.uploadTechnical = boolDeadlines.onTechnicalReception
-    permissions.uploadEconomical = boolDeadlines.onEconomicalReception
+    permissions.uploadTechnical = boolDeadlines.onReception
+    permissions.uploadEconomical = boolDeadlines.onReception
     permissions.askQuestion = boolDeadlines.onQuestions
     permissions.seeAnswersQuestion = boolDeadlines.onQuestionsAnswers
-    permissions.seeNotice = true
-    permissions.seeEconomicalFormSpecs = true
+    permissions.sendNotice = true
 
     /* create */
     const userBidding = {
@@ -318,7 +315,7 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
           return {}
         }
       })
-    return filterDataByRole(userBidding)
+    return userBidding
   } else if (role === roles.platform.shadowUser) { return {} }
   else {
     /* permissions */

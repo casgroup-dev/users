@@ -153,9 +153,10 @@ const Bidding = mongoose.model(BiddingModelName, mongoose.Schema({
   }],
   deadlines: { // Deadlines for this bidding
     questions: {start: Date, end: Date}, // Questions of the providers
-    questionsAnswers: {start: Date, end: Date}, // Answers to the questions
-    technicalReception: {start: Date, end: Date},
-    economicalReception: {start: Date, end: Date}, // Offers from the providers
+    answers: {start: Date, end: Date}, // Answers to the questions
+    reception: {start: Date, end: Date},
+    // technicalReception: {start: Date, end: Date},
+    // economicalReception: {start: Date, end: Date}, // Offers from the providers
     technicalEvaluation: {start: Date, end: Date},
     economicalEvaluation: {start: Date, end: Date},
     technicalVisit: {start: Date, end: Date}, // Only informative
