@@ -32,18 +32,23 @@ async function approve (biddingId, type, businessNames, itemName) {
         err.status = 404
         throw err
       }
-      for (let user in bidding.users) {
-        let businessName = user.company.businessName
-        if (businessNames.indexOf(businessName) !== -1) {
-          if (type === types.technically) user.approved.technically = true
-          else user.approved.economically.push(itemName)
+      for (let participant of bidding.users) {
+        let participantBusinessName = participant.user.company.businessName
+        // If the participant's business name is in the array of the request
+        if (businessNames.indexOf(participantBusinessName) !== -1) {
+          // Approve technically: set flag to true
+          if (type === types.technically) participant.approved.technically = true
+          // Approve economically: push the item for which the participant's company was approved
+          else if (type === types.economically) participant.approved.economically.push(itemName)
         } else {
-          if (type === types.technically) user.approved.technically = false
-          else {
-            // If the user had the itemName but in this request it does not, remove it from it
-            let indexOfItemName = user.approved.economically.indexOf(itemName)
+          // If the participant's business name is not in the request: set flag to false
+          if (type === types.technically) participant.approved.technically = false
+          // If the approvement is economically and the participant's business name is not in the request we
+          // must check if the participant had the itemName and remove it
+          else if (type === types.economically) {
+            let indexOfItemName = participant.approved.economically.indexOf(itemName)
             if (indexOfItemName !== -1) {
-              user.approved.economically.splice(indexOfItemName, 1)
+              participant.approved.economically.splice(indexOfItemName, 1)
             }
           }
         }
