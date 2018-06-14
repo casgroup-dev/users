@@ -56,10 +56,8 @@ function approveTechnically (req, res, next) {
 
 /**
  * Receive an object as:
- * {itemName: String, adjudications: [{adjudicated: Boolean, comment: String, provider: String}, ...]}
+ * {itemName: String, adjudications: [{comment: String, provider: String, adjudicated: Boolean}, ...]}
  * The provider string is the businessName of the company approved.
- * If there is the case that the user has an item for which was approved but in this request it does not appear,
- * this middleware will delete the old adjudicated item.
  * @param {Object} req - Request object.
  * @param {Object} res - Response object.
  * @param {Function} next - Callback function to pass to the next middleware.
@@ -76,24 +74,15 @@ function approveEconomically (req, res, next) {
   if (!adjudications) return throwError(`There is no 'adjudications' property in the request.`)
   findBidding(req).then(bidding => {
     bidding.users.forEach(participant => {
-      let adjudicatedItems = participant.approved.economically
-      // Check if the participant has already adjudicated this item
-      let indexOfItem = adjudicatedItems.find(itemWithComment => itemWithComment.itemName === itemName)
-      // Check if the user's company is in the incoming request's providers
+      // Find the answer of the participant for this item
+      let participantAnswer = participant.economicalFormAnswers.find(answer => answer.itemName === itemName)
+      // Find the adjudication object for his company
       let adjudication = adjudications.find(adjudication => adjudication.provider === participant.user.company.businessName)
-      if (adjudication) {
-        if (indexOfItem !== -1) {
-          // If the user already has adjudicated the item change the comment
-          adjudicatedItems[indexOfItem].comment = adjudication.comment
-        } else {
-          // If not, push the new item
-          adjudicatedItems.push({itemName, comment: adjudication.comment})
-        }
-      } else if (indexOfItem !== -1) {
-        // If there is no adjudication for this user and there is an old adjudicated item, remove it
-        adjudicatedItems.splice(indexOfItem, 1)
+      if (participantAnswer && adjudication) {
+        // Update comment and boolean that indicates if the item is adjudicated for this company
+        participantAnswer.adminComment = adjudication.comment
+        participantAnswer.adjudicated = adjudication.adjudicated
       }
-      // If the user does not adjudicated anything and it does not have the item adjudicated in an old request, do nothing
     })
     bidding.save()
     req.body = {} // Set empty json to not send anything to the front
