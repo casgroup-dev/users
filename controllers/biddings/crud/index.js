@@ -23,6 +23,39 @@ function create (req, res, next) {
     })
 }
 
+async function getBiddingRole (email, bidding) {
+  var role
+  await User.findOne({email: email})
+    .then(user => {
+      return bidding.users.filter((current) => {
+        return current.user.equals(user._id)
+      })
+    })
+    .then(users => {
+      if (!users[0]) {
+        role = null
+      } else {
+        role = users[0].role
+      }
+    })
+  return role
+}
+
+const permissionsDenied = {
+  'seeParticipants': false,
+  'uploadTecnical': false,
+  'uploadEconomical': false,
+  'reviewTechnical': false,
+  'reviewEconomical': false,
+  'askQuestion': false,
+  'seeQuestions': false,
+  'answerQuestions': false,
+  'seeAnswers': false,
+  'seeNotice': false,
+  'canModify': false,
+  'seeSchedule': false
+}
+
 const get = {
 
   /**
@@ -71,12 +104,22 @@ const get = {
         }
         token.getData(req.options.token)
           .then(async tokenData => {
-            var boolDeadlines = checkDeadlines(bidding.deadlines)
-            var filteredBidding = await filterIdBiddingByRole(bidding, tokenData.role, tokenData.email, boolDeadlines)
-            var usersBidding = await changeIdToEmail(filteredBidding)
-            filteredBidding.users = usersBidding
-            req.body = filteredBidding
-            return next()
+            var biddingRole = await getBiddingRole(tokenData.email, bidding)
+            if (!biddingRole) {
+              req.body = {
+                'title': bidding.title,
+                'permissions': permissionsDenied,
+                'invite': true
+              }
+              return next()
+            } else {
+              var boolDeadlines = checkDeadlines(bidding.deadlines)
+              var filteredBidding = await filterIdBiddingByRole(bidding, biddingRole, tokenData.email, boolDeadlines)
+              var usersBidding = await changeIdToEmail(filteredBidding)
+              filteredBidding.users = usersBidding
+              req.body = filteredBidding
+              return next()
+            }
           })
           .catch(err => {
             logger.error(err)
@@ -277,20 +320,9 @@ async function filterDataByRole (bidding, role, email) {
  * @param boolDeadlines
  */
 async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
-  var permissions = {
-    'seeParticipants': false,
-    'uploadTecnical': false,
-    'uploadEconomical': false,
-    'reviewTechnical': false,
-    'reviewEconomical': false,
-    'askQuestion': false,
-    'seeQuestions': false,
-    'answerQuestions': false,
-    'seeAnswers': false,
-    'seeNotice': false,
-    'canModify': false,
-    'seeSchedule': true}
-  if (role === roles.platform.user || role === roles.platform.companyAdmin) {
+  var permissions = {...permissionsDenied}
+  permissions.seeSchedule = true
+  if (role === roles.bidding.provider) {
     /* permissions */
     permissions.uploadTecnical = boolDeadlines.onTechnicalReception
     permissions.uploadEconomical = boolDeadlines.onEconomicalReception
@@ -321,9 +353,10 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
         })
       })
     return userBidding
-  } else if (role === roles.platform.shadowUser) {
-    for (let field in bidding) delete bidding[field]
-  } else {
+  } else if (role === roles.bidding.client) {
+    // TODO: client role
+    //for (let field in bidding) delete bidding[field]
+  } else if (role === roles.bidding.engineer) {
     /* permissions */
     permissions.seeParticipants = true
     permissions.reviewTechnical = boolDeadlines.onTechnicalEvaluation
