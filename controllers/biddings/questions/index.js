@@ -1,5 +1,5 @@
 const {Bidding} = require('../../../models')
-const {getUserId} = require('../../auth/token')
+const {token, getUserId} = require('../../auth')
 // const {indexOfObject} = require('../../utils')
 
 /**
@@ -78,7 +78,39 @@ function answer (req, res, next) {
   next()
 }
 
+const get = {
+  question: (req, res, next) => {
+    token.getUserId(req.params.token || req.options.token)
+      .then(() => {
+        Bidding.findOne({_id: req.params.id})
+          .then(bidding => {
+            if (!bidding) {
+              const err = new Error('No such bidding')
+              err.status = 404
+              throw err
+            }
+            return bidding
+          })
+          .then(bidding => {
+            // Get question index
+            let questionIndex = indexOfObject(bidding.questions, '_id', req.params.questionId)
+            // Edit answer
+            req.body = bidding.questions[questionIndex]
+            next()
+          })
+      })
+      .catch(err => {
+        next(err)
+      })
+  },
+
+  all: (req, res, next) => {
+    Bidding.findOne({_id: req.params.id})
+  }
+}
+
 module.exports = {
   update,
-  answer
+  answer,
+  get
 }

@@ -74,7 +74,7 @@ const get = {
           })
           .then(bidding => {
             let participant = bidding.users.find((biddingParticipant) => {
-              if (biddingParticipant.user.equals(userId)) { // ObjectID comparision
+              if (biddingParticipant.user.equals(userId)) { // ObjectID comparison
                 return true
               }
             })

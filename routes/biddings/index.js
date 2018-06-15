@@ -62,6 +62,13 @@ router.get('/:id/documents/all/',
   result.send
 )
 
+router.get('/:id/questions/:questionId',
+  token.validate,
+  token.validate.roles([roles.platform.admin]),
+  questions.get.question,
+  result.send
+)
+
 router.put('/:id',
   token.validate,
   token.validate.roles([roles.platform.admin]),
