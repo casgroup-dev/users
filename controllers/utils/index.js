@@ -37,7 +37,17 @@ const result = {
   }
 }
 
+function indexOfObject (array, field, value) {
+  for (let idx in array) {
+    if (array[idx][field] === value) {
+      return idx
+    }
+  }
+  return -1
+}
+
 module.exports = {
   format,
-  result
+  result,
+  indexOfObject
 }

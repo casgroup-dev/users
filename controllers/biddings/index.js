@@ -82,7 +82,7 @@ const input = {
     },
 
     /**
-     * Checks that a questions is not empty
+     * Checks that a question is not empty
      * @param req
      * @param res
      * @param next
@@ -90,6 +90,22 @@ const input = {
     question: (req, res, next) => {
       if (!req.body.question) {
         const err = new Error('Question field is empty')
+        err.code = 400
+        logger.error(err)
+        next(err)
+      }
+      next()
+    },
+
+    /**
+     * Checks that an answer is not empty
+     * @param req
+     * @param res
+     * @param next
+     */
+    answer: (req, res, next) => {
+      if (!req.body.answer) {
+        const err = new Error('Answer is empty')
         err.code = 400
         logger.error(err)
         next(err)
