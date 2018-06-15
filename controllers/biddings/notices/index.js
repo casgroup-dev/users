@@ -24,7 +24,7 @@ function update (req, res, next) {
           bidding.notices.push({
             user: userId,
             notice: req.body.notice,
-            date: Date.now()
+            date: req.body.date
           })
           bidding.save()
         })
