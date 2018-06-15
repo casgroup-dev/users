@@ -2,7 +2,7 @@ const logger = require('winston-namespace')('bidding:files')
 const {Bidding, User, roles} = require('../../../models')
 const {token} = require('../../auth')
 const {s3} = require('../../../services/aws')
-const {indexOfObject} = require('/../../utils')
+const {indexOfObject} = require('../../utils')
 
 /**
  * Put a technical offer. Body request should have the following format:

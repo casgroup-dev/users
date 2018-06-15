@@ -24,7 +24,7 @@ router.put('/:id/questions/:questionId',
   token.validate,
   token.validate.roles([roles.platform.admin]),
   input.validate.answer,
-  questions.update,
+  questions.answer,
   result.send
 )
 
