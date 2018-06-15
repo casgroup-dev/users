@@ -1,6 +1,7 @@
 const approve = require('./approvement')
 const bidding = require('./crud')
 const questions = require('./questions')
+const notices = require('./notices')
 const files = require('./files')
 const publish = require('./publish')
 const {Bidding, User, roles} = require('../../models')
@@ -103,9 +104,27 @@ const input = {
      * @param res
      * @param next
      */
+
     answer: (req, res, next) => {
       if (!req.body.answer) {
         const err = new Error('Answer is empty')
+        err.code = 400
+        logger.error(err)
+        next(err)
+      }
+      next()
+    },
+
+    /**
+    * Checks that a notice is not empty
+    * @param req
+    * @param res
+    * @param next
+    */
+
+    notice: (req, res, next) => {
+      if (!req.body.notice) {
+        const err = new Error('Notice is empty')
         err.code = 400
         logger.error(err)
         next(err)
@@ -186,8 +205,9 @@ function validateBiddingUsers (users) {
 module.exports = {
   input,
   bidding,
-  questions,
-  approve,
   files,
+  questions,
+  notices,
+  approve,
   publish
 }

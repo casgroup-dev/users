@@ -1,4 +1,6 @@
 const logger = require('winston-namespace')('utils')
+const {token} = require('../auth')
+const {User} = require('../../models')
 
 const format = {
   /**
@@ -46,8 +48,29 @@ function indexOfObject (array, field, value) {
   return -1
 }
 
+function getUserIdByToken (tkn) {
+  return token.getData(tkn)
+    .then(tokenData => {
+      return tokenData.email
+    }).then(email => {
+      return User.findOne({email: email})
+        .then(user => {
+          if (!user) {
+            const err = new Error(`Unexpected: User with email '${email}' not found`)
+            err.status = 404
+            throw err
+          }
+          return user._id
+        })
+    })
+    .catch(err => {
+      throw err
+    })
+}
+
 module.exports = {
   format,
   result,
-  indexOfObject
+  indexOfObject,
+  getUserIdByToken
 }

@@ -2,7 +2,7 @@ const router = require('express').Router()
 const {roles} = require('../../models')
 const {token} = require('../../controllers/auth')
 const {result} = require('../../controllers/utils')
-const {approve, input, bidding, files, questions, publish} = require('../../controllers/biddings')
+const {approve, input, bidding, files, questions, notices, publish} = require('../../controllers/biddings')
 
 router.post('/',
   token.validate,
@@ -25,6 +25,15 @@ router.put('/:id/questions/:questionId',
   token.validate.roles([roles.platform.admin]),
   input.validate.answer,
   questions.answer,
+  result.send
+)
+
+router.put('/:id/notices',
+  token.validate,
+  token.validate.roles([roles.platform.admin]),
+  // TODO: engineers can post notices too
+  input.validate.notice,
+  notices.update,
   result.send
 )
 
