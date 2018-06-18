@@ -1,5 +1,5 @@
 const logger = require('winston-namespace')('bidding:crud')
-const {Bidding, User, Company, roles} = require('../../../models')
+const {Bidding, User, roles} = require('../../../models')
 const {token} = require('../../auth')
 
 /**
@@ -73,7 +73,7 @@ const get = {
       })
   },
 
-  //TODO filter to only send a user's data, if you are provider
+  // TODO filter to only send a user's data, if you are provider
   /**
    * Given a bidding name in params, return the specific bidding info according to user role requesting it.
    * @param req
@@ -93,8 +93,7 @@ const get = {
       })
       .then(async ({bidding, tokenData}) => {
         const boolDeadlines = checkDeadlines(bidding.deadlines)
-        const filteredBidding = await filterIdBiddingByRole(bidding, tokenData.role, tokenData.email, boolDeadlines)
-        req.body = filteredBidding
+        req.body = await filterIdBiddingByRole(bidding, tokenData.role, tokenData.email, boolDeadlines)
         next()
       })
       .catch(err => {
@@ -283,6 +282,7 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
       questions: bidding.questions,
       deadlines: bidding.deadlines,
       economicalForm: bidding.economicalForm,
+      publishedResults: bidding.publishedResults,
       permissions: permissions
     }
     await User.findOne({email: email})
@@ -301,8 +301,9 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
         }
       })
     return userBidding
-  } else if (role === roles.platform.shadowUser) { return {} }
-  else {
+  } else if (role === roles.platform.shadowUser) {
+    return {}
+  } else {
     /* permissions */
     permissions.seeParticipants = true
     permissions.reviewTechnical = boolDeadlines.onTechnicalEvaluation
@@ -312,7 +313,7 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
     permissions.canModify = true
 
     /* create */
-    const adminBidding = {
+    return {
       id: bidding._id,
       title: bidding.title,
       rules: bidding.rules,
@@ -321,10 +322,9 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
       users: bidding.users,
       questions: bidding.questions,
       deadlines: bidding.deadlines,
-      permissions: permissions
-    }
-
-    return adminBidding // role === admin sends all info without modification
+      publishedResults: bidding.publishedResults,
+      permissions
+    } // role === admin sends all info without modification
   }
 }
 

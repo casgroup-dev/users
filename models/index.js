@@ -164,7 +164,8 @@ const Bidding = mongoose.model(BiddingModelName, mongoose.Schema({
     technicalVisit: {start: Date, end: Date}, // Only informative
     results: Date
   },
-  biddingType: {type: Number, required: true, enum: [1, 2]} // Bidding with 1 stage or two stages
+  biddingType: {type: Number, required: true, enum: [1, 2]}, // Bidding with 1 stage or two stages
+  publishedResults: {type: Boolean, default: false} // Indicates if the results are published
 }))
 
 module.exports = {
