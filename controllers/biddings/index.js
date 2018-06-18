@@ -1,5 +1,6 @@
 const bidding = require('./crud')
 const files = require('./files')
+const users = require('./users')
 const {Bidding, User, roles} = require('../../models')
 const logger = require('winston-namespace')('bidding')
 
@@ -151,5 +152,6 @@ function validateBiddingUsers (users) {
 module.exports = {
   bidding,
   files,
-  input
+  input,
+  users
 }
