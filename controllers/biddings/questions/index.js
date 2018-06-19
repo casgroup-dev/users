@@ -1,5 +1,5 @@
 const {Bidding} = require('../../../models')
-const {token, getUserId} = require('../../auth')
+const {token} = require('../../auth')
 // const {indexOfObject} = require('../../utils')
 
 /**
@@ -10,7 +10,7 @@ const {token, getUserId} = require('../../auth')
  */
 
 function update (req, res, next) {
-  getUserId(req.params.token || req.options.token)
+  token.getUserId(req.params.token || req.options.token)
     .then(userId => {
       Bidding.findOne({_id: req.params.id, 'users.user': userId})
         .then(bidding => {
@@ -24,7 +24,8 @@ function update (req, res, next) {
         .then(bidding => {
           bidding.questions.push({
             user: userId,
-            question: req.body.question
+            question: req.body.question,
+            answer: req.body.answer
           })
           bidding.save()
         })
@@ -49,7 +50,7 @@ function indexOfObject (array, field, value) {
 }
 
 function answer (req, res, next) {
-  getUserId(req.params.token || req.options.token)
+  token.getUserId(req.params.token || req.options.token)
     .then(() => {
       Bidding.findOne({_id: req.params.id})
         .then(bidding => {

@@ -1,5 +1,5 @@
 const {Bidding} = require('../../../models')
-const {token, getUserId} = require('../../auth')
+const {token} = require('../../auth')
 
 /**
  * Updates a bidding with the data coming from the body of the request.
@@ -9,7 +9,7 @@ const {token, getUserId} = require('../../auth')
  */
 
 function update (req, res, next) {
-  getUserId(req.params.token || req.options.token)
+  token.getUserId(req.params.token || req.options.token)
     .then(userId => {
       Bidding.findOne({_id: req.params.id})
         .then(bidding => {
