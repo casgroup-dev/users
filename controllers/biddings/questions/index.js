@@ -80,8 +80,8 @@ function answer (req, res, next) {
 
 const get = {
   question: (req, res, next) => {
-    token.getUserId(req.params.token || req.options.token)
-      .then(() => {
+    token.getUserName(req.params.token || req.options.token)
+      .then(userName => {
         Bidding.findOne({_id: req.params.id})
           .then(bidding => {
             if (!bidding) {
@@ -95,7 +95,7 @@ const get = {
             // Get question index
             let questionIndex = indexOfObject(bidding.questions, '_id', req.params.questionId)
             // Edit answer
-            req.body = bidding.questions[questionIndex]
+            req.body = {name: userName, question: bidding.questions[questionIndex].question, answer: bidding.questions[questionIndex].answer}
             next()
           })
       })

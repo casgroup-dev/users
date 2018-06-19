@@ -131,10 +131,31 @@ function getUserId (tkn) {
     })
 }
 
+function getUserName (tkn) {
+  return getData(tkn)
+    .then(tokenData => {
+      return tokenData.email
+    }).then(email => {
+      return User.findOne({email: email})
+        .then(user => {
+          if (!user) {
+            const err = new Error(`Unexpected: User with email '${email}' not found`)
+            err.status = 404
+            throw err
+          }
+          return user.name
+        })
+    })
+    .catch(err => {
+      throw err
+    })
+}
+
 module.exports = {
   create,
   validate,
   getData,
   handleError,
-  getUserId
+  getUserId,
+  getUserName
 }
