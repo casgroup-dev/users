@@ -69,6 +69,13 @@ router.get('/:id/questions/:questionId',
   result.send
 )
 
+router.get('/:id/allquestions',
+  token.validate,
+  token.validate.roles([roles.platform.admin]),
+  questions.get.all,
+  result.send
+)
+
 router.put('/:id',
   token.validate,
   token.validate.roles([roles.platform.admin]),

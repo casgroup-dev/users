@@ -105,7 +105,25 @@ const get = {
   },
 
   all: (req, res, next) => {
-    Bidding.findOne({_id: req.params.id})
+    token.getUserId(req.params.token || req.options.token)
+      .then(() => {
+        Bidding.findOne({_id: req.params.id})
+          .then(bidding => {
+            if (!bidding) {
+              const err = new Error('No such bidding')
+              err.status = 404
+              throw err
+            }
+            return bidding
+          })
+          .then(bidding => {
+            req.body = bidding.questions
+            next()
+          })
+      })
+      .catch(err => {
+        next(err)
+      })
   }
 }
 
