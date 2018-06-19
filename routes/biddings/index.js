@@ -69,13 +69,13 @@ router.delete('/:id/documents/:type',
 
 router.post('/:id/addUser/:userid',
   token.validate,
-  users.addUser,
+  users.post.addUser,
   result.send
 )
 
 router.post('/:id/participate',
   token.validate,
-  users.participate,
+  users.post.participate,
   result.send
 )
 

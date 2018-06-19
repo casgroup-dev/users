@@ -107,6 +107,7 @@ const get = {
             var biddingRole = await getBiddingRole(tokenData.email, bidding)
             if (!biddingRole) {
               req.body = {
+                'id': bidding._id,
                 'title': bidding.title,
                 'permissions': permissionsDenied,
                 'invite': true
