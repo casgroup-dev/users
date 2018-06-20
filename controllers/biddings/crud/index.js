@@ -1,5 +1,5 @@
 const logger = require('winston-namespace')('bidding:crud')
-const {Bidding, User, Company, roles} = require('../../../models')
+const {Bidding, User, roles, Company} = require('../../../models')
 const {token} = require('../../auth')
 
 /**
@@ -9,17 +9,18 @@ const {token} = require('../../auth')
  * @param {Object} res
  * @param {Function} next
  */
+// TODO Add engineer
 function create (req, res, next) {
   req.body.bidding.save()
     .then(bidding => {
       req.body = bidding
-      return next()
+      next()
     })
     .catch(err => {
       logger.error(err)
       err = new Error('Internal error while storing the new bidding instance.')
       err.status = 500
-      return next(err)
+      next(err)
     })
 }
 
@@ -71,23 +72,27 @@ const get = {
         if (!biddings) {
           const err = new Error(`There are no biddings yet`)
           err.status = 404
-          return next(err)
+          throw err
         }
-        const tokenData = token.getData(req.options.token)
+        return biddings
+      })
+      .then(biddings => {
+        const tokenData = token.getData(req.options.token || req.params.token)
         const filterData = (bidding) => filterDataByRole(bidding, tokenData.role, tokenData.email)
         biddings.map(filterData)
         biddings.map(getCleanAndPopulatedBidding)
         req.body = biddings
-        return next()
+        next()
       })
       .catch(err => {
         logger.error(err)
         err = new Error('Internal error while retrieving the biddings list.')
         err.status = 500
-        return next(err)
+        next(err)
       })
   },
 
+  // TODO filter to only send a user's data, if you are provider
   /**
    * Given a bidding name in params, return the specific bidding info according to user role requesting it.
    * @param req
@@ -96,11 +101,12 @@ const get = {
    */
   byId: (req, res, next) => {
     Bidding.findOne({_id: req.params.id})
+      .populate({path: 'users.user', populate: {path: 'company'}})
       .then(async bidding => {
         if (!bidding) {
           const err = new Error('No bidding found')
           err.status = 404
-          return next(err)
+          next(err)
         }
         token.getData(req.options.token)
           .then(async tokenData => {
@@ -133,7 +139,7 @@ const get = {
         logger.error(err)
         err = new Error('Internal error while retrieving the bidding data.')
         err.status = 500
-        return next(err)
+        next(err)
       })
   }
 }
@@ -148,9 +154,9 @@ function update (req, res, next) {
   Bidding.findOne({_id: req.params.id})
     .then(bidding => {
       if (!bidding) {
-        const err = new Error("Can't update. No such bidding")
+        const err = new Error('Can\'t update. No such bidding')
         err.status = 404
-        return next(err)
+        next(err)
       }
       bidding.set(req.body)
       getCleanAndPopulatedBidding(bidding)
@@ -161,7 +167,7 @@ function update (req, res, next) {
       logger.error(err)
       err = new Error('Internal error while retrieving the bidding data.')
       err.status = 500
-      return next(err)
+      next(err)
     })
 }
 
@@ -175,13 +181,13 @@ function remove (req, res, next) {
   Bidding.remove({_id: req.params.id})
     .then(() => {
       req.body = {message: 'Success.'}
-      return next()
+      next()
     })
     .catch(err => {
       logger.error(err)
       err = new Error('Error while removing the bidding instance.')
       err.status = 500
-      return next(err)
+      next(err)
     })
 }
 
@@ -196,7 +202,6 @@ function getCleanAndPopulatedBidding (bidding) {
       })
   }))
     .then(() => {
-      // logger.info(bidding)
       return bidding
     })
 }
@@ -240,7 +245,7 @@ async function changeIdToEmail (bidding) {
  * @returns showable
  */
 function checkDeadlines (deadlines) {
-  var stages = {
+  const stages = {
     onQuestions: false,
     onQuestionsAnswers: false,
     onTechnicalReception: false,
@@ -255,17 +260,13 @@ function checkDeadlines (deadlines) {
     currentDate < deadlines.questions.end) {
     stages.onQuestions = true
   }
-  if (currentDate > deadlines.questionsAnswers.start &&
-    currentDate < deadlines.questionsAnswers.end) {
+  if (currentDate > deadlines.answers.start &&
+    currentDate < deadlines.answers.end) {
     stages.onQuestionsAnswers = true
   }
-  if (currentDate > deadlines.technicalReception.start &&
-    currentDate < deadlines.technicalReception.end) {
-    stages.onTechnicalReception = true
-  }
-  if (currentDate > deadlines.economicalReception.start &&
-    currentDate < deadlines.economicalReception.end) {
-    stages.onEconomicalReception = true
+  if (currentDate > deadlines.reception.start &&
+    currentDate < deadlines.reception.end) {
+    stages.onReception = true
   }
   if (currentDate > deadlines.technicalEvaluation.start &&
     currentDate < deadlines.technicalEvaluation.end) {
@@ -308,7 +309,7 @@ async function filterDataByRole (bidding, role, email) {
         })
       })
   } else if (role === roles.platform.shadowUser) {
-    for (let field in bidding) delete bidding[field]
+    return {}
   }
   return bidding // role === admin sends all info without modification
 }
@@ -325,33 +326,38 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
   permissions.seeSchedule = true
   if (role === roles.bidding.provider) {
     /* permissions */
-    permissions.uploadTecnical = boolDeadlines.onTechnicalReception
-    permissions.uploadEconomical = boolDeadlines.onEconomicalReception
+    permissions.uploadTechnical = boolDeadlines.onReception
+    permissions.uploadEconomical = boolDeadlines.onReception
     permissions.askQuestion = boolDeadlines.onQuestions
     permissions.seeAnswersQuestion = boolDeadlines.onQuestionsAnswers
-    permissions.seeNotice = true
+    permissions.sendNotice = true
 
     /* create */
-    var userBidding = {}
-    userBidding.id = bidding._id
-    userBidding.title = bidding.title
-    userBidding.rules = bidding.rules
-    userBidding.users = bidding.users
-    userBidding.questions = bidding.questions
-    userBidding.deadlines = bidding.deadlines
-    userBidding.permissions = permissions
-
+    const userBidding = {
+      id: bidding._id,
+      title: bidding.title,
+      rules: bidding.rules,
+      users: bidding.users,
+      questions: bidding.questions,
+      deadlines: bidding.deadlines,
+      economicalForm: bidding.economicalForm,
+      publishedResults: bidding.publishedResults,
+      permissions: permissions
+    }
     await User.findOne({email: email})
       .then(user => {
-        if (!user) {
+        if (user) {
+          userBidding.users = bidding.users.filter((current) => {
+            return current.user.equals(user._id)
+          })
+          userBidding.questions = bidding.questions.filter((current) => {
+            return current.user.equals(user._id)
+          })
+
+          return userBidding
+        } else {
           return {}
         }
-        userBidding.users = bidding.users.filter((current) => {
-          return current.user.equals(user._id)
-        })
-        userBidding.questions = bidding.questions.filter((current) => {
-          return current.user.equals(user._id)
-        })
       })
     return userBidding
   } else if (role === roles.bidding.client) {
@@ -367,23 +373,48 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
     permissions.canModify = true
 
     /* create */
-    var adminBidding = {}
-    adminBidding.id = bidding._id
-    adminBidding.title = bidding.title
-    adminBidding.rules = bidding.rules
-    adminBidding.bidderCompany = bidding.bidderCompany
-    adminBidding.users = bidding.users
-    adminBidding.questions = bidding.questions
-    adminBidding.deadlines = bidding.deadlines
-    adminBidding.permissions = permissions
-
-    return adminBidding // role === admin sends all info without modification
+    return {
+      id: bidding._id,
+      title: bidding.title,
+      rules: bidding.rules,
+      economicalForm: bidding.economicalForm,
+      bidderCompany: bidding.bidderCompany,
+      users: bidding.users,
+      questions: bidding.questions,
+      deadlines: bidding.deadlines,
+      publishedResults: bidding.publishedResults,
+      permissions
+    } // role === admin sends all info without modification
   }
+}
+
+function economicalOfferTable (req, res, next) {
+  token.getUserId(req.params.token || req.options.token)
+    .then(async userId => {
+      let bidding = await Bidding.findOne({_id: req.params.id, 'users.user': userId})
+      if (!bidding) {
+        const err = new Error('No such bidding')
+        err.status = 404
+        throw err
+      }
+      let participant = bidding.users.find((biddingParticipant) => {
+        if (biddingParticipant.user.equals(userId)) { // ObjectID comparision
+          return true
+        }
+      })
+      participant.economicalFormAnswers = req.body
+      bidding.save()
+      next()
+    })
+    .catch(err => {
+      next(err)
+    })
 }
 
 module.exports = {
   create,
   get,
   update,
+  economicalOfferTable,
   remove
 }

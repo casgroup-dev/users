@@ -120,16 +120,32 @@ const Bidding = mongoose.model(BiddingModelName, mongoose.Schema({
       default: roles.bidding.provider,
       enum: Object.values(roles.bidding)
     },
+    approved: {
+      technically: {type: Boolean, default: false}
+    },
+    awarded: {type: Boolean, default: false},
+    awardComment: {type: String}, // If it has any general message, for example if no body won
     // Only providers upload this documents
     documents: {
-      economicals: [{name: String, url: String, date: {type: Date, default: Date.now}}],
-      technicals: [{name: String, url: String, date: {type: Date, default: Date.now}}]
+      economicals: [{
+        name: {type: String},
+        url: {type: String},
+        date: {type: Date, default: Date.now}
+      }],
+      technicals: [{
+        name: {type: String},
+        url: {type: String},
+        date: {type: Date, default: Date.now}
+      }]
     },
     // Answers to the economical form
     economicalFormAnswers: [{
       itemName: String,
       specifications: String,
-      costPerUnit: Number
+      costPerUnit: Number,
+      // Only the admin can change these
+      adjudicated: Boolean,
+      adminComment: String
     }]
   }],
   questions: [{
@@ -138,16 +154,18 @@ const Bidding = mongoose.model(BiddingModelName, mongoose.Schema({
     answer: String
   }],
   deadlines: { // Deadlines for this bidding
-    questions: {start: Date, end: Date}, // Questions of the providers
-    questionsAnswers: {start: Date, end: Date}, // Answers to the questions
-    technicalReception: {start: Date, end: Date},
-    economicalReception: {start: Date, end: Date}, // Offers from the providers
-    technicalEvaluation: {start: Date, end: Date},
-    economicalEvaluation: {start: Date, end: Date},
-    technicalVisit: {start: Date, end: Date}, // Only informative
-    results: Date
+    questions: {start: Date, end: Date, name: {type: String, default: 'Recepción de preguntas'}}, // Questions of the providers
+    answers: {start: Date, end: Date, name: {type: String, default: 'Contestación'}}, // Answers to the questions
+    reception: {start: Date, end: Date, name: {type: String, default: 'Recepción de documentos'}},
+    // technicalReception: {start: Date, end: Date},
+    // economicalReception: {start: Date, end: Date}, // Offers from the providers
+    technicalEvaluation: {start: Date, end: Date, name: {type: String, default: 'Evaluación técnica'}},
+    economicalEvaluation: {start: Date, end: Date, name: {type: String, default: 'Evaluación económica'}},
+    technicalVisit: {start: Date, end: Date, name: {type: String, default: 'Visita técnica'}}, // Only informative
+    results: {date: Date, name: {type: String, default: 'Publicación de resultados'}}
   },
-  biddingType: {type: Number, required: true, enum: [1, 2]} // Bidding with 1 stage or two stages
+  biddingType: {type: Number, required: true, enum: [1, 2]}, // Bidding with 1 stage or two stages
+  publishedResults: {type: Boolean, default: false} // Indicates if the results are published
 }))
 
 module.exports = {

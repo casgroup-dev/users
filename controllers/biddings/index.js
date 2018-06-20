@@ -1,6 +1,8 @@
+const approve = require('./approvement')
 const bidding = require('./crud')
 const files = require('./files')
 const users = require('./users')
+const publish = require('./publish')
 const {Bidding, User, roles} = require('../../models')
 const logger = require('winston-namespace')('bidding')
 
@@ -121,7 +123,7 @@ function validateBiddingUsers (users) {
   const cpUsers = Object.assign([], users)
   // Reference: https://developer.mozilla.org/es/docs/Web/JavaScript/Referencia/Objetos_globales/Array/map
   return new Promise(resolve => {
-    return Promise.all(cpUsers.map(async function (currentUser, index, users) {
+    return Promise.all(cpUsers.map(async function (currentUser, index) {
       await User.findOne({'email': currentUser.email}) // Receives email from front
         .then(user => {
           if (!user) {
@@ -150,8 +152,10 @@ function validateBiddingUsers (users) {
 }
 
 module.exports = {
+  approve,
   bidding,
   files,
   input,
-  users
+  users,
+  publish
 }

@@ -2,7 +2,7 @@ const router = require('express').Router()
 const {roles} = require('../../models/index')
 const {token} = require('../../controllers/auth/index')
 const {result} = require('../../controllers/utils/index')
-const {input, bidding, files, users} = require('../../controllers/biddings/index')
+const {approve, input, bidding, files, users, publish} = require('../../controllers/biddings/index')
 
 router.post('/',
   token.validate,
@@ -39,9 +39,22 @@ router.get('/:id/documents/all/',
 
 router.put('/:id',
   token.validate,
-  // token.validate.roles([roles.platform.admin]),
+  token.validate.roles([roles.platform.admin]),
   input.validate.update,
   bidding.update,
+  result.send
+)
+
+router.put('/:id/publish/results',
+  token.validate,
+  token.validate.roles([roles.platform.admin]),
+  publish.results,
+  result.send
+)
+
+router.put('/:id/forms/economical',
+  token.validate,
+  bidding.economicalOfferTable,
   result.send
 )
 
@@ -52,6 +65,25 @@ router.put('/:id/documents/:type', // Bidding id and type of the document econom
   files.putDocumentUrl,
   result.send
 )
+
+/* Receive an array with the name of the company approved as: ['Microsoft', 'Apple', ...] */
+router.put('/:id/approve/technically',
+  token.validate,
+  token.validate.roles([roles.platform.admin]), // Only admin can approve
+  approve.technically,
+  result.send
+)
+
+/* Receive an object with the itemName and the businessNames to approve */
+router.put('/:id/approve/economically',
+  token.validate,
+  token.validate.roles([roles.platform.admin]),
+  approve.economically,
+  result.send
+)
+
+/* Publish the results of the bidding */
+// router.put('/:id/publish/result',)
 
 router.delete('/:id',
   token.validate,
