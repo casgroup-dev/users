@@ -9,7 +9,6 @@ const {token} = require('../../auth')
  * @param {Object} res
  * @param {Function} next
  */
-// TODO Fix duplication error
 async function create (req, res, next) {
   let newBidding = req.body.bidding
   token.getData(req.options.token || req.params.token)
@@ -25,7 +24,6 @@ async function create (req, res, next) {
     .then(() => {
       newBidding.save()
         .then(bidding => {
-          console.log(bidding)
           req.body = bidding
           next()
         })
@@ -113,15 +111,17 @@ const get = {
  */
 function update (req, res, next) {
   Bidding.findOne({_id: req.params.id})
-    .then(bidding => {
+    .then(async bidding => {
       if (!bidding) {
         const err = new Error('Can\'t update. No such bidding')
         err.status = 404
         next(err)
       }
-      bidding.set(req.body)
-      getCleanAndPopulatedBidding(bidding)
-      req.body = bidding
+      let tempBid = await getUsers(req.body)
+      uniteBidding(bidding, tempBid)
+      bidding.set(tempBid)
+      bidding.save()
+      req.body = {}
       next()
     })
     .catch(err => {
@@ -129,6 +129,39 @@ function update (req, res, next) {
       err = new Error('Internal error while retrieving the bidding data.')
       err.status = 500
       next(err)
+    })
+}
+
+function uniteBidding(currentBidding, newBidding) {
+  currentBidding.bidderCompany = newBidding.bidderCompany
+  currentBidding.title = newBidding.title
+  currentBidding.deadlines = newBidding.deadlines
+  currentBidding.rules = newBidding.rules
+  currentBidding.biddingType = newBidding.biddingType
+  currentBidding.economicalForm = newBidding.economicalForm
+  for (let i = 0; i < newBidding.users.length; ++i) {
+    let user = newBidding.users[i]
+    if (!currentBidding.users.includes(user.user)) {
+      currentBidding.users.push(user)
+    }
+  }
+}
+
+async function getUsers (bidding) {
+  return Promise.all(bidding.users.map(async (current, index, users) => {
+    await User.findOne({email: current.email})
+      .then(user => {
+        users[index].user = user.id
+        delete users[index].email
+      })
+      .catch(err => {
+        logger.error(err)
+        err = new Error('Error while populating.')
+        err.status = 500
+      })
+  }))
+    .then(() => {
+      return bidding
     })
 }
 
@@ -160,6 +193,11 @@ function getCleanAndPopulatedBidding (bidding) {
           role: current.role,
           email: user.email
         }
+      })
+      .catch(err => {
+        logger.error(err)
+        err = new Error('Error while populating.')
+        err.status = 500
       })
   }))
     .then(() => {

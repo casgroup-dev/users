@@ -76,7 +76,6 @@ const input = {
         err.status = 400
         next(err)
       }
-      next()
     },
 
     fileUrl: (req, res, next) => {
@@ -105,7 +104,7 @@ const input = {
 
 function isSuperSet (s1, s2) {
   for (let elem of s2) {
-    if (!s1.has(elem)) {
+    if (s1.indexOf(elem) === -1) {
       return false
     }
   }
