@@ -11,27 +11,30 @@ const {token} = require('../../auth')
  */
 async function create (req, res, next) {
   let newBidding = req.body.bidding
-  token.getData(req.options.token || req.params.token)
-    .then(token => {
-      User.findOne({'email': token.email})
-        .then(user => {
-          newBidding.users.push({
-            user: user,
-            role: 'engineer'
-          })
-        })
+  const user = await getCurrentUser(req.options.token || req.params.token)
+  newBidding.users.push({
+    user: user,
+    role: 'engineer'
+  })
+  newBidding.save()
+    .then(bidding => {
+      req.body = bidding
+      next()
     })
-    .then(() => {
-      newBidding.save()
-        .then(bidding => {
-          req.body = bidding
-          next()
-        })
-        .catch(err => {
-          logger.error(err)
-          err = new Error('Internal error while storing the new bidding instance.')
-          err.status = 500
-          next(err)
+    .catch(err => {
+      logger.error(err)
+      err = new Error('Internal error while storing the new bidding instance.')
+      err.status = 500
+      next(err)
+    })
+}
+
+function getCurrentUser (tokn) {
+  return token.getData(tokn)
+    .then(token => {
+      return User.findOne({'email': token.email})
+        .then(user => {
+          return user
         })
     })
 }
@@ -151,7 +154,7 @@ async function getUsers (bidding) {
   return Promise.all(bidding.users.map(async (current, index, users) => {
     await User.findOne({email: current.email})
       .then(user => {
-        users[index].user = user.id
+        users[index].user = user
         delete users[index].email
       })
       .catch(err => {
