@@ -154,15 +154,15 @@ const Bidding = mongoose.model(BiddingModelName, mongoose.Schema({
     answer: String
   }],
   deadlines: { // Deadlines for this bidding
-    questions: {start: Date, end: Date}, // Questions of the providers
-    answers: {start: Date, end: Date}, // Answers to the questions
-    reception: {start: Date, end: Date},
+    questions: {start: Date, end: Date, name: {type: String, default: 'Recepción de preguntas'}}, // Questions of the providers
+    answers: {start: Date, end: Date, name: {type: String, default: 'Contestación'}}, // Answers to the questions
+    reception: {start: Date, end: Date, name: {type: String, default: 'Recepción de documentos'}},
     // technicalReception: {start: Date, end: Date},
     // economicalReception: {start: Date, end: Date}, // Offers from the providers
-    technicalEvaluation: {start: Date, end: Date},
-    economicalEvaluation: {start: Date, end: Date},
-    technicalVisit: {start: Date, end: Date}, // Only informative
-    results: Date
+    technicalEvaluation: {start: Date, end: Date, name: {type: String, default: 'Evaluación técnica'}},
+    economicalEvaluation: {start: Date, end: Date, name: {type: String, default: 'Evaluación económica'}},
+    technicalVisit: {start: Date, end: Date, name: {type: String, default: 'Visita técnica'}}, // Only informative
+    results: {date: Date, name: {type: String, default: 'Publicación de resultados'}}
   },
   biddingType: {type: Number, required: true, enum: [1, 2]}, // Bidding with 1 stage or two stages
   publishedResults: {type: Boolean, default: false} // Indicates if the results are published
