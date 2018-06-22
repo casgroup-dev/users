@@ -27,6 +27,7 @@ function update (req, res, next) {
             date: req.body.date
           })
           bidding.save()
+          next()
         })
         .catch(() => {
           console.log('Error')
@@ -35,7 +36,6 @@ function update (req, res, next) {
     .catch(err => {
       next(err)
     })
-  next()
 }
 
 const get = {

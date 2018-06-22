@@ -1,6 +1,6 @@
 const {Bidding} = require('../../../models')
 const {token} = require('../../auth')
-// const {indexOfObject} = require('../../utils')
+const {indexOfObject} = require('../../utils')
 
 /**
  * Updates a bidding with the data coming from the body of the request.
@@ -28,6 +28,7 @@ function update (req, res, next) {
             answer: req.body.answer
           })
           bidding.save()
+          next()
         })
         .catch(() => {
           console.log('Error')
@@ -36,17 +37,6 @@ function update (req, res, next) {
     .catch(err => {
       next(err)
     })
-  next()
-}
-
-// TODO: Merge this function with the function with the same name in utils.
-function indexOfObject (array, field, value) {
-  for (let idx in array) {
-    if (array[idx][field].equals(value)) {
-      return idx
-    }
-  }
-  return -1
 }
 
 function answer (req, res, next) {
@@ -56,7 +46,6 @@ function answer (req, res, next) {
         .then(bidding => {
           if (!bidding) {
             const err = new Error('No such bidding')
-            console.log('no encuentra la bidding')
             err.status = 404
             throw err
           }
@@ -68,6 +57,7 @@ function answer (req, res, next) {
           // Edit answer
           bidding.questions[questionIndex].answer = req.body.answer
           bidding.save()
+          next()
         })
         .catch(() => {
           console.log('Error')
@@ -76,7 +66,6 @@ function answer (req, res, next) {
     .catch(err => {
       next(err)
     })
-  next()
 }
 
 const get = {

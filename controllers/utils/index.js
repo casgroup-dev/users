@@ -41,36 +41,22 @@ const result = {
 
 function indexOfObject (array, field, value) {
   for (let idx in array) {
-    if (array[idx][field] === value) {
-      return idx
+    if (value instanceof Object) {
+      if (array[idx][field].equals(value)) {
+        return idx
+      }
+    }
+    else {
+      if (array[idx][field] === value) {
+        return idx
+      }
     }
   }
   return -1
 }
 
-function getUserIdByToken (tkn) {
-  return token.getData(tkn)
-    .then(tokenData => {
-      return tokenData.email
-    }).then(email => {
-      return User.findOne({email: email})
-        .then(user => {
-          if (!user) {
-            const err = new Error(`Unexpected: User with email '${email}' not found`)
-            err.status = 404
-            throw err
-          }
-          return user._id
-        })
-    })
-    .catch(err => {
-      throw err
-    })
-}
-
 module.exports = {
   format,
   result,
-  indexOfObject,
-  getUserIdByToken
+  indexOfObject
 }
