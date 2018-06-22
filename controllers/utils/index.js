@@ -41,7 +41,7 @@ const result = {
 
 function indexOfObject (array, field, value) {
   for (let idx in array) {
-    if (value instanceof Object) {
+    if (array instanceof Object) {
       if (array[idx][field].equals(value)) {
         return idx
       }
