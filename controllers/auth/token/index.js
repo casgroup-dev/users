@@ -84,6 +84,19 @@ validate.company = (req, res, next) => {
 }
 
 /**
+ * Check if the token is from an admin. Returns a json with the boolean property 'isAdmin'.
+ * @param req
+ * @param res
+ * @param next
+ */
+validate.isAdmin = (req, res, next) => {
+  getData(req.options.token).then(tokenData => {
+    req.body = {isAdmin: tokenData.role === roles.platform.admin}
+    return next()
+  })
+}
+
+/**
  * Returns a promise to get the data of the token. Rejects on error.
  * @param {String} token
  * @returns {Promise<Object>}
