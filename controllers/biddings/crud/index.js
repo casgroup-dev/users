@@ -122,8 +122,8 @@ const get = {
             } else {
               var boolDeadlines = checkDeadlines(bidding.deadlines)
               var filteredBidding = await filterIdBiddingByRole(bidding, biddingRole, tokenData.email, boolDeadlines)
-              var usersBidding = await changeIdToEmail(filteredBidding)
-              filteredBidding.users = usersBidding
+              // var usersBidding = await changeIdToEmail(filteredBidding)
+              // filteredBidding.users = usersBidding
               req.body = filteredBidding
               return next()
             }
@@ -245,11 +245,10 @@ async function changeIdToEmail (bidding) {
  * @returns showable
  */
 function checkDeadlines (deadlines) {
-  const stages = {
+  var stages = {
     onQuestions: false,
     onQuestionsAnswers: false,
-    onTechnicalReception: false,
-    onEconomicalReception: false,
+    onReception: false,
     onTechnicalEvaluation: false,
     onEconomicalEvaluation: false,
     onTechnicalVisit: false,
@@ -361,8 +360,20 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
       })
     return userBidding
   } else if (role === roles.bidding.client) {
-    // TODO: client role
-    //for (let field in bidding) delete bidding[field]
+    permissions.seeParticipants = true
+
+    return {
+      id: bidding._id,
+      title: bidding.title,
+      rules: bidding.rules,
+      economicalForm: bidding.economicalForm,
+      bidderCompany: bidding.bidderCompany,
+      users: bidding.users,
+      questions: bidding.questions,
+      deadlines: bidding.deadlines,
+      publishedResults: bidding.publishedResults,
+      permissions: permissions
+    }
   } else if (role === roles.bidding.engineer) {
     /* permissions */
     permissions.seeParticipants = true
@@ -383,8 +394,8 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
       questions: bidding.questions,
       deadlines: bidding.deadlines,
       publishedResults: bidding.publishedResults,
-      permissions
-    } // role === admin sends all info without modification
+      permissions: permissions
+    }
   }
 }
 
