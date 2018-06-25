@@ -1,4 +1,6 @@
 const logger = require('winston-namespace')('utils')
+const {token} = require('../auth')
+const {User} = require('../../models')
 
 const format = {
   /**
@@ -37,7 +39,24 @@ const result = {
   }
 }
 
+function indexOfObject (array, field, value) {
+  for (let idx in array) {
+    if (array instanceof Object) {
+      if (array[idx][field].equals(value)) {
+        return idx
+      }
+    }
+    else {
+      if (array[idx][field] === value) {
+        return idx
+      }
+    }
+  }
+  return -1
+}
+
 module.exports = {
   format,
-  result
+  result,
+  indexOfObject
 }
