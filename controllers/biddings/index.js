@@ -208,5 +208,6 @@ module.exports = {
   questions,
   notices,
   approve,
-  publish
+  publish,
+  users
 }

@@ -116,38 +116,38 @@ const get = {
    * @param next
    */
   byId: (req, res, next) => {
-    Bidding.findOne({_id: req.params.id})
-      .populate({path: 'users.user', populate: {path: 'company'}})
-      .then(async bidding => {
-        if (!bidding) {
-          const err = new Error('No bidding found')
-          err.status = 404
-          next(err)
-        }
-        return {bidding, tokenData: token.getData(req.options.token)}
-      })
-      .then(async ({bidding, tokenData}) => {
-        var biddingRole = await getBiddingRole(tokenData.email, bidding)
-        if (!biddingRole) {
-          req.body = {
-            'id': bidding._id,
-            'title': bidding.title,
-            'permissions': permissionsDenied,
-            'invite': true
-          }
-          return next()
-        } else {
-          var boolDeadlines = checkDeadlines(bidding.deadlines)
-          var filteredBidding = await filterIdBiddingByRole(bidding, biddingRole, tokenData.email, boolDeadlines)
-          req.body = filteredBidding
-          return next()
-        }
-      })
-      .catch(err => {
-        logger.error(err)
-        err = new Error('Internal error while retrieving the bidding data.')
-        err.status = 500
-        next(err)
+    token.getData(req.options.token)
+      .then(tokenData => {
+        Bidding.findOne({_id: req.params.id})
+          .populate({path: 'users.user', populate: {path: 'company'}})
+          .then(async bidding => {
+            if (!bidding) {
+              const err = new Error('No bidding found')
+              err.status = 404
+              next(err)
+            }
+            var biddingRole = await getBiddingRole(tokenData.email, bidding)
+            if (!biddingRole) {
+              req.body = {
+                id: bidding._id,
+                title: bidding.title,
+                permissions: permissionsDenied,
+                invite: true
+              }
+              return next()
+            } else {
+              var boolDeadlines = checkDeadlines(bidding.deadlines)
+              var filteredBidding = await filterIdBiddingByRole(bidding, biddingRole, tokenData.email, boolDeadlines)
+              req.body = filteredBidding
+              return next()
+            }
+          })
+          .catch(err => {
+            logger.error(err)
+            err = new Error('Internal error while retrieving the bidding data.')
+            err.status = 500
+            next(err)
+          })
       })
   }
 }
