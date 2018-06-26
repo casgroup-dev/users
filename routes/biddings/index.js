@@ -1,14 +1,45 @@
 const router = require('express').Router()
-const {roles} = require('../../models/index')
-const {token} = require('../../controllers/auth/index')
-const {result} = require('../../controllers/utils/index')
-const {approve, input, bidding, files, publish} = require('../../controllers/biddings/index')
+const {roles} = require('../../models')
+const {token} = require('../../controllers/auth')
+const {result} = require('../../controllers/utils')
+const {approve, input, bidding, files, questions, notices, publish} = require('../../controllers/biddings')
 
 router.post('/',
   token.validate,
   token.validate.roles([roles.platform.admin]),
   input.validate.creation,
   bidding.create,
+  result.send
+)
+
+router.put('/:id/questions',
+  token.validate,
+  // token.validate.roles([roles.platform.user]),
+  input.validate.question,
+  questions.update,
+  result.send
+)
+
+router.put('/:id/questions/:questionId',
+  token.validate,
+  token.validate.roles([roles.platform.admin]),
+  input.validate.answer,
+  questions.answer,
+  result.send
+)
+
+router.put('/:id/notices',
+  token.validate,
+  token.validate.roles([roles.platform.admin]),
+  input.validate.notice,
+  notices.update,
+  result.send
+)
+
+router.get('/:id/notices/all',
+  token.validate,
+  // token.validate.roles([roles.platform.user]),
+  notices.get.all,
   result.send
 )
 
@@ -34,6 +65,20 @@ router.get('/:id/documents/all/',
   token.validate,
   token.validate.roles([roles.platform.admin]),
   files.get.all,
+  result.send
+)
+
+router.get('/:id/questions/:questionId',
+  token.validate,
+  token.validate.roles([roles.platform.admin]),
+  questions.get.question,
+  result.send
+)
+
+router.get('/:id/allquestions',
+  token.validate,
+  token.validate.roles([roles.platform.admin]),
+  questions.get.all,
   result.send
 )
 

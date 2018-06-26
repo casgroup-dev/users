@@ -13,6 +13,12 @@ router.post('/',
   result.send
 )
 
+/* Check if the token is from an admin. Returns json with boolean property 'isAdmin'. */
+router.get('/is-admin',
+  token.validate.isAdmin,
+  result.send
+)
+
 /* Get information of the user using GET method */
 router.get('/:email',
   token.validate,

@@ -153,6 +153,11 @@ const Bidding = mongoose.model(BiddingModelName, mongoose.Schema({
     question: {type: String, required: true},
     answer: String
   }],
+  notices: [{
+    user: {type: mongoose.Schema.Types.ObjectId, ref: UserModelName, required: true},
+    notice: {type: String, required: true},
+    date: {type: Date, required: true}
+  }],
   deadlines: { // Deadlines for this bidding
     questions: {start: Date, end: Date, name: {type: String, default: 'Recepción de preguntas'}}, // Questions of the providers
     answers: {start: Date, end: Date, name: {type: String, default: 'Contestación'}}, // Answers to the questions
