@@ -89,10 +89,6 @@ const get = {
 
   all: (req, res, next) => {
     Bidding.findOne({_id: req.params.id})
-    /* TODO: popular compañias usuarios. Debería funcionar con algo como
-     * .populate({path: 'users', populate: {path: 'user', model: 'User'}})
-     * Aunque esto trae todos los field de User. Pero por alguna razón no funciona
-     */
       .then(bidding => {
         if (!bidding) {
           const err = new Error('No such bidding')
@@ -202,7 +198,6 @@ function deleteFromS3 (url) {
     Bucket: process.env.S3_BUCKET_NAME,
     Key: key
   }
-  // logger.info(key)
   s3.deleteObject(params, (err, data) => {
     if (err) throw err
     else { logger.info(`Successfully deleted '${key}'`) }

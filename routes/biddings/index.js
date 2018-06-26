@@ -2,7 +2,7 @@ const router = require('express').Router()
 const {roles} = require('../../models')
 const {token} = require('../../controllers/auth')
 const {result} = require('../../controllers/utils')
-const {approve, input, bidding, files, questions, notices, publish} = require('../../controllers/biddings')
+const {approve, input, bidding, files, users, questions, notices, publish} = require('../../controllers/biddings')
 
 router.post('/',
   token.validate,
@@ -141,6 +141,18 @@ router.delete('/:id/documents/:type',
   token.validate,
   token.validate.roles([roles.platform.user]),
   files.remove,
+  result.send
+)
+
+router.post('/:id/addUser/:userid',
+  token.validate,
+  users.post.addUser,
+  result.send
+)
+
+router.post('/:id/participate',
+  token.validate,
+  users.post.participate,
   result.send
 )
 

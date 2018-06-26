@@ -1,5 +1,5 @@
 const logger = require('winston-namespace')('bidding:crud')
-const {Bidding, User, roles} = require('../../../models')
+const {Bidding, User, roles, Company} = require('../../../models')
 const {token} = require('../../auth')
 
 /**
@@ -27,6 +27,40 @@ async function create (req, res, next) {
       err.status = 500
       next(err)
     })
+}
+
+async function getBiddingRole (email, bidding) {
+  var role
+  await User.findOne({email: email})
+    .then(user => {
+      return bidding.users.filter((current) => {
+        return current.user.equals(user._id)
+      })
+    })
+    .then(users => {
+      if (!users[0]) {
+        role = null
+      } else {
+        role = users[0].role
+      }
+    })
+  return role
+}
+
+const permissionsDenied = {
+  seeParticipants: false,
+  uploadTechnical: false,
+  uploadEconomical: false,
+  reviewTechnical: false,
+  reviewEconomical: false,
+  askQuestion: false,
+  seeQuestions: false,
+  answerQuestions: false,
+  seeAnswers: false,
+  sendNotice: false,
+  canModify: false,
+  seeSchedule: true,
+  seeEconomicalFormSpecs: false
 }
 
 function getCurrentUser (tokn) {
@@ -93,9 +127,21 @@ const get = {
         return {bidding, tokenData: token.getData(req.options.token)}
       })
       .then(async ({bidding, tokenData}) => {
-        const boolDeadlines = checkDeadlines(bidding.deadlines)
-        req.body = await filterIdBiddingByRole(bidding, tokenData.role, tokenData.email, boolDeadlines)
-        next()
+        var biddingRole = await getBiddingRole(tokenData.email, bidding)
+        if (!biddingRole) {
+          req.body = {
+            'id': bidding._id,
+            'title': bidding.title,
+            'permissions': permissionsDenied,
+            'invite': true
+          }
+          return next()
+        } else {
+          var boolDeadlines = checkDeadlines(bidding.deadlines)
+          var filteredBidding = await filterIdBiddingByRole(bidding, biddingRole, tokenData.email, boolDeadlines)
+          req.body = filteredBidding
+          return next()
+        }
       })
       .catch(err => {
         logger.error(err)
@@ -218,8 +264,7 @@ function checkDeadlines (deadlines) {
   const stages = {
     onQuestions: false,
     onQuestionsAnswers: false,
-    onTechnicalReception: false,
-    onEconomicalReception: false,
+    onReception: false,
     onTechnicalEvaluation: false,
     onEconomicalEvaluation: false,
     onTechnicalVisit: false,
@@ -292,22 +337,9 @@ async function filterDataByRole (bidding, role, email) {
  * @param boolDeadlines
  */
 async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
-  const permissions = {
-    seeParticipants: false,
-    uploadTechnical: false,
-    uploadEconomical: false,
-    reviewTechnical: false,
-    reviewEconomical: false,
-    askQuestion: false,
-    seeQuestions: false,
-    answerQuestions: false,
-    seeAnswers: false,
-    sendNotice: false,
-    canModify: false,
-    seeSchedule: true,
-    seeEconomicalFormSpecs: false
-  }
-  if (role === roles.platform.user || role === roles.platform.companyAdmin) {
+  var permissions = {...permissionsDenied}
+  permissions.seeSchedule = true
+  if (role === roles.bidding.provider) {
     /* permissions */
     permissions.uploadTechnical = boolDeadlines.onReception
     permissions.uploadEconomical = boolDeadlines.onReception
@@ -343,9 +375,22 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
         }
       })
     return userBidding
-  } else if (role === roles.platform.shadowUser) {
-    return {}
-  } else {
+  } else if (role === roles.bidding.client) {
+    permissions.seeParticipants = true
+
+    return {
+      id: bidding._id,
+      title: bidding.title,
+      rules: bidding.rules,
+      economicalForm: bidding.economicalForm,
+      bidderCompany: bidding.bidderCompany,
+      users: bidding.users,
+      questions: bidding.questions,
+      deadlines: bidding.deadlines,
+      publishedResults: bidding.publishedResults,
+      permissions: permissions
+    }
+  } else if (role === roles.bidding.engineer) {
     /* permissions */
     permissions.seeParticipants = true
     permissions.reviewTechnical = boolDeadlines.onTechnicalEvaluation
@@ -365,8 +410,8 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
       questions: bidding.questions,
       deadlines: bidding.deadlines,
       publishedResults: bidding.publishedResults,
-      permissions
-    } // role === admin sends all info without modification
+      permissions: permissions
+    }
   }
 }
 
