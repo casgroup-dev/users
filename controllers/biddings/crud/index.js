@@ -43,18 +43,19 @@ async function getBiddingRole (email, bidding) {
 }
 
 const permissionsDenied = {
-  'seeParticipants': false,
-  'uploadTecnical': false,
-  'uploadEconomical': false,
-  'reviewTechnical': false,
-  'reviewEconomical': false,
-  'askQuestion': false,
-  'seeQuestions': false,
-  'answerQuestions': false,
-  'seeAnswers': false,
-  'seeNotice': false,
-  'canModify': false,
-  'seeSchedule': false
+  seeParticipants: false,
+  uploadTechnical: false,
+  uploadEconomical: false,
+  reviewTechnical: false,
+  reviewEconomical: false,
+  askQuestion: false,
+  seeQuestions: false,
+  answerQuestions: false,
+  seeAnswers: false,
+  sendNotice: false,
+  canModify: false,
+  seeSchedule: true,
+  seeEconomicalFormSpecs: false
 }
 
 const get = {
@@ -108,32 +109,24 @@ const get = {
           err.status = 404
           next(err)
         }
-        token.getData(req.options.token)
-          .then(async tokenData => {
-            var biddingRole = await getBiddingRole(tokenData.email, bidding)
-            if (!biddingRole) {
-              req.body = {
-                'id': bidding._id,
-                'title': bidding.title,
-                'permissions': permissionsDenied,
-                'invite': true
-              }
-              return next()
-            } else {
-              var boolDeadlines = checkDeadlines(bidding.deadlines)
-              var filteredBidding = await filterIdBiddingByRole(bidding, biddingRole, tokenData.email, boolDeadlines)
-              // var usersBidding = await changeIdToEmail(filteredBidding)
-              // filteredBidding.users = usersBidding
-              req.body = filteredBidding
-              return next()
-            }
-          })
-          .catch(err => {
-            logger.error(err)
-            err = new Error('Cannot obtain token data.')
-            err.status = 500
-            return next(err)
-          })
+        return {bidding, tokenData: token.getData(req.options.token)}
+      })
+      .then(async ({bidding, tokenData}) => {
+        var biddingRole = await getBiddingRole(tokenData.email, bidding)
+        if (!biddingRole) {
+          req.body = {
+            'id': bidding._id,
+            'title': bidding.title,
+            'permissions': permissionsDenied,
+            'invite': true
+          }
+          return next()
+        } else {
+          var boolDeadlines = checkDeadlines(bidding.deadlines)
+          var filteredBidding = await filterIdBiddingByRole(bidding, biddingRole, tokenData.email, boolDeadlines)
+          req.body = filteredBidding
+          return next()
+        }
       })
       .catch(err => {
         logger.error(err)
@@ -207,45 +200,12 @@ function getCleanAndPopulatedBidding (bidding) {
 }
 
 /**
- * Changes the users list ids for email.
- * @param bidding
- */
-async function changeIdToEmail (bidding) {
-  var cleanBiddingUsers = []
-  new Promise((resolve, reject) => {
-    resolve(cleanBiddingUsers)
-  })
-  return Promise.all(bidding.users.map((current, index, users) => {
-    return User.findOne({_id: current.user})
-      .then(async user => {
-        cleanBiddingUsers.push({
-          'user': user.email,
-          'economicalFormAnswers': users[index].economicalFormAnswers,
-          'documents': users[index].documents,
-          'role': users[index].role,
-          'phone': user.phone,
-          'name': user.name,
-          'company': await Company.findOne({_id: user.company})
-            .then(company => {
-              return company.businessName
-            })
-        })
-      })
-  }))
-    .then(() => {
-      return new Promise((resolve, reject) => {
-        resolve(cleanBiddingUsers)
-      })
-    })
-}
-
-/**
  * Checks the current dates and deadlines.
  * @param deadlines
  * @returns showable
  */
 function checkDeadlines (deadlines) {
-  var stages = {
+  const stages = {
     onQuestions: false,
     onQuestionsAnswers: false,
     onReception: false,

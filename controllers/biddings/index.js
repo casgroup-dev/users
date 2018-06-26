@@ -1,5 +1,7 @@
 const approve = require('./approvement')
 const bidding = require('./crud')
+const questions = require('./questions')
+const notices = require('./notices')
 const files = require('./files')
 const users = require('./users')
 const publish = require('./publish')
@@ -81,6 +83,56 @@ const input = {
       next()
     },
 
+    /**
+     * Checks that a question is not empty
+     * @param req
+     * @param res
+     * @param next
+     */
+    question: (req, res, next) => {
+      if (!req.body.question) {
+        const err = new Error('Question field is empty')
+        err.code = 400
+        logger.error(err)
+        next(err)
+      }
+      next()
+    },
+
+    /**
+     * Checks that an answer is not empty
+     * @param req
+     * @param res
+     * @param next
+     */
+
+    answer: (req, res, next) => {
+      if (!req.body.answer) {
+        const err = new Error('Answer is empty')
+        err.code = 400
+        logger.error(err)
+        next(err)
+      }
+      next()
+    },
+
+    /**
+    * Checks that a notice is not empty
+    * @param req
+    * @param res
+    * @param next
+    */
+
+    notice: (req, res, next) => {
+      if (!req.body.notice) {
+        const err = new Error('Notice is empty')
+        err.code = 400
+        logger.error(err)
+        next(err)
+      }
+      next()
+    },
+
     fileUrl: (req, res, next) => {
       /* https://stackoverflow.com/questions/26726862/how-to-determine-if-object-exists-aws-s3-node-js-sdk
       *  Should verify url is valid, i.e, file has been uploaded. Why this could be important (or even critical)?
@@ -152,10 +204,11 @@ function validateBiddingUsers (users) {
 }
 
 module.exports = {
-  approve,
+  input,
   bidding,
   files,
-  input,
-  users,
+  questions,
+  notices,
+  approve,
   publish
 }

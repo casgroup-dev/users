@@ -2,6 +2,7 @@ const logger = require('winston-namespace')('bidding:files')
 const {Bidding, User, roles} = require('../../../models')
 const {token} = require('../../auth')
 const {s3} = require('../../../services/aws')
+const {indexOfObject} = require('../../utils')
 
 /**
  * Put a technical offer. Body request should have the following format:
@@ -73,7 +74,7 @@ const get = {
           })
           .then(bidding => {
             let participant = bidding.users.find((biddingParticipant) => {
-              if (biddingParticipant.user.equals(userId)) { // ObjectID comparision
+              if (biddingParticipant.user.equals(userId)) { // ObjectID comparison
                 return true
               }
             })
@@ -88,10 +89,6 @@ const get = {
 
   all: (req, res, next) => {
     Bidding.findOne({_id: req.params.id})
-    /* TODO: popular compañias usuarios. Debería funcionar con algo como
-     * .populate({path: 'users', populate: {path: 'user', model: 'User'}})
-     * Aunque esto trae todos los field de User. Pero por alguna razón no funciona
-     */
       .then(bidding => {
         if (!bidding) {
           const err = new Error('No such bidding')
@@ -193,14 +190,6 @@ function removeIdFromDocuments (documents) {
   }
 }
 
-function indexOfObject (array, field, value) {
-  for (let idx in array) {
-    if (array[idx][field] === value) {
-      return idx
-    }
-  }
-}
-
 function deleteFromS3 (url) {
   // Parse url to get the key
   const urlPrefix = `https://${process.env.S3_BUCKET_NAME}.s3.amazonaws.com/`
@@ -209,7 +198,6 @@ function deleteFromS3 (url) {
     Bucket: process.env.S3_BUCKET_NAME,
     Key: key
   }
-  // logger.info(key)
   s3.deleteObject(params, (err, data) => {
     if (err) throw err
     else { logger.info(`Successfully deleted '${key}'`) }
