@@ -46,7 +46,7 @@ const Company = mongoose.model(CompanyModelName, companySchema)
  */
 const User = mongoose.model(UserModelName, mongoose.Schema({
   email: {type: mongoose.SchemaTypes.Email, required: true, unique: true},
-  company: {type: mongoose.Schema.Types.ObjectId, ref: CompanyModelName, required: true},
+  company: {type: mongoose.Schema.Types.ObjectId, ref: CompanyModelName},
   role: {
     type: String,
     required: true,
@@ -55,7 +55,7 @@ const User = mongoose.model(UserModelName, mongoose.Schema({
   },
   password: {type: String, required: true},
   phone: {type: String},
-  name: {type: String, required: true}
+  name: {type: String}
 }))
 
 /**

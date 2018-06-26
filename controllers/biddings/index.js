@@ -28,7 +28,6 @@ const input = {
      * @param {Function} next
      */
     creation: (req, res, next) => {
-      console.log(req.body)
       // logger.info(req.body)
       if (!req.body) {
         const err = new Error('No body')
@@ -79,7 +78,6 @@ const input = {
         err.status = 400
         next(err)
       }
-      next()
     },
 
     /**
@@ -158,7 +156,7 @@ const input = {
 
 function isSuperSet (s1, s2) {
   for (let elem of s2) {
-    if (!s1.has(elem)) {
+    if (s1.indexOf(elem) === -1) {
       return false
     }
   }
@@ -189,7 +187,7 @@ function validateBiddingUsers (users) {
             }
             const validatedUser = Object.assign({}, currentUser)
             delete validatedUser.email
-            validatedUser.id = user.id
+            validatedUser.user = user
             cpUsers[index] = validatedUser
             return validatedUser // We actually modify input array
           }
