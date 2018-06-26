@@ -194,7 +194,7 @@ function checkDeadlines (deadlines) {
     currentDate < deadlines.technicalVisit.end) {
     stages.onTechnicalVisit = true
   }
-  if (currentDate > deadlines.results) {
+  if (currentDate > deadlines.results.date) {
     stages.onResults = true
   }
   return stages
