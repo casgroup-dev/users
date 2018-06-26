@@ -161,6 +161,7 @@ async function getUsers (bidding) {
         logger.error(err)
         err = new Error('Error while populating.')
         err.status = 500
+        throw err
       })
   }))
     .then(() => {
