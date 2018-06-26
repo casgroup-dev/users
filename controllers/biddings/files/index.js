@@ -2,6 +2,7 @@ const logger = require('winston-namespace')('bidding:files')
 const {Bidding, User, roles} = require('../../../models')
 const {token} = require('../../auth')
 const {s3} = require('../../../services/aws')
+const {indexOfObject} = require('../../utils')
 
 /**
  * Put a technical offer. Body request should have the following format:
@@ -73,7 +74,7 @@ const get = {
           })
           .then(bidding => {
             let participant = bidding.users.find((biddingParticipant) => {
-              if (biddingParticipant.user.equals(userId)) { // ObjectID comparision
+              if (biddingParticipant.user.equals(userId)) { // ObjectID comparison
                 return true
               }
             })
@@ -190,14 +191,6 @@ function removeIdFromDocuments (documents) {
   return {
     economical: documents.economicals.map(c => { return {name: c.name, url: c.url, date: c.date} }),
     technical: documents.technicals.map(c => { return {name: c.name, url: c.url, date: c.date} })
-  }
-}
-
-function indexOfObject (array, field, value) {
-  for (let idx in array) {
-    if (array[idx][field] === value) {
-      return idx
-    }
   }
 }
 
