@@ -237,12 +237,13 @@ function remove (req, res, next) {
 
 function getCleanAndPopulatedBidding (bidding) {
   Promise.all(bidding.users.map(async (current, index, users) => {
-    await User.findOne({_id: current.id})
+    await User.findOne({_id: current.user})
       .then(user => {
         users[index] = {
           role: current.role,
           email: user.email
         }
+        console.log(user.email)
       })
       .catch(err => {
         logger.error(err)
@@ -345,7 +346,6 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
     permissions.uploadEconomical = boolDeadlines.onReception
     permissions.askQuestion = boolDeadlines.onQuestions
     permissions.seeAnswersQuestion = boolDeadlines.onQuestionsAnswers
-    permissions.sendNotice = true
 
     /* create */
     const userBidding = {
@@ -354,6 +354,7 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
       rules: bidding.rules,
       users: bidding.users,
       questions: bidding.questions,
+      notices: bidding.notices,
       deadlines: bidding.deadlines,
       economicalForm: bidding.economicalForm,
       publishedResults: bidding.publishedResults,
@@ -386,6 +387,7 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
       bidderCompany: bidding.bidderCompany,
       users: bidding.users,
       questions: bidding.questions,
+      notices: bidding.notices,
       deadlines: bidding.deadlines,
       publishedResults: bidding.publishedResults,
       permissions: permissions
@@ -398,6 +400,7 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
     permissions.seeQuestion = boolDeadlines.onQuestions || boolDeadlines.onQuestionsAnswers
     permissions.answerQuestions = boolDeadlines.onQuestions || boolDeadlines.onQuestionsAnswers
     permissions.canModify = true
+    permissions.sendNotice = true
 
     /* create */
     return {
