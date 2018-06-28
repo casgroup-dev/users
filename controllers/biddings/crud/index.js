@@ -59,8 +59,7 @@ const permissionsDenied = {
   seeAnswers: false,
   sendNotice: false,
   canModify: false,
-  seeSchedule: true,
-  seeEconomicalFormSpecs: false
+  seeSchedule: true
 }
 
 function getCurrentUser (tokn) {
@@ -270,32 +269,32 @@ function checkDeadlines (deadlines) {
     onTechnicalVisit: false,
     onResults: false
   }
-  const currentDate = Date()
-  if (currentDate > deadlines.questions.start &&
-    currentDate < deadlines.questions.end) {
+  const currentDate = new Date()
+  if (currentDate >= deadlines.questions.start &&
+    currentDate <= deadlines.questions.end) {
     stages.onQuestions = true
   }
-  if (currentDate > deadlines.answers.start &&
-    currentDate < deadlines.answers.end) {
+  if (currentDate >= deadlines.answers.start &&
+    currentDate <= deadlines.answers.end) {
     stages.onQuestionsAnswers = true
   }
-  if (currentDate > deadlines.reception.start &&
-    currentDate < deadlines.reception.end) {
+  if (currentDate >= deadlines.reception.start &&
+    currentDate <= deadlines.reception.end) {
     stages.onReception = true
   }
-  if (currentDate > deadlines.technicalEvaluation.start &&
-    currentDate < deadlines.technicalEvaluation.end) {
+  if (currentDate >= deadlines.technicalEvaluation.start &&
+    currentDate <= deadlines.technicalEvaluation.end) {
     stages.onTechnicalEvaluation = true
   }
-  if (currentDate > deadlines.economicalEvaluation.start &&
-    currentDate < deadlines.economicalEvaluation.end) {
+  if (currentDate >= deadlines.economicalEvaluation.start &&
+    currentDate <= deadlines.economicalEvaluation.end) {
     stages.onEconomicalEvaluation = true
   }
-  if (currentDate > deadlines.technicalVisit.start &&
-    currentDate < deadlines.technicalVisit.end) {
+  if (currentDate >= deadlines.technicalVisit.start &&
+    currentDate <= deadlines.technicalVisit.end) {
     stages.onTechnicalVisit = true
   }
-  if (currentDate > deadlines.results.date) {
+  if (currentDate >= deadlines.results.date) {
     stages.onResults = true
   }
   return stages
@@ -368,7 +367,6 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
           userBidding.questions = bidding.questions.filter((current) => {
             return current.user.equals(user._id)
           })
-
           return userBidding
         } else {
           return {}
