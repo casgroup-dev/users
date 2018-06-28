@@ -59,7 +59,8 @@ const permissionsDenied = {
   seeAnswers: false,
   sendNotice: false,
   canModify: false,
-  seeSchedule: true
+  seeSchedule: true,
+  seeResults: false
 }
 
 function getCurrentUser (tokn) {
@@ -82,28 +83,30 @@ const get = {
    */
 
   all: (req, res, next) => {
-    Bidding.find()
-      .then(biddings => {
-        if (!biddings) {
-          const err = new Error(`There are no biddings yet`)
-          err.status = 404
-          throw err
-        }
-        return biddings
-      })
-      .then(biddings => {
-        const tokenData = token.getData(req.options.token || req.params.token)
-        const filterData = (bidding) => filterDataByRole(bidding, tokenData.role, tokenData.email)
-        biddings.map(filterData)
-        biddings.map(getCleanAndPopulatedBidding)
-        req.body = biddings
-        next()
-      })
-      .catch(err => {
-        logger.error(err)
-        err = new Error('Internal error while retrieving the biddings list.')
-        err.status = 500
-        next(err)
+    token.getData(req.options.token || req.params.token)
+      .then(tkn => {User.findOne({email: tkn.email})
+        .then(user => {
+          Bidding.find({'users.user': user._id})
+            .then(biddings => {
+              if (!biddings) {
+                const err = new Error(`There are no biddings yet`)
+                err.status = 404
+                throw err
+              }
+              return biddings
+            })
+            .then(biddings => {
+              biddings.map(getCleanAndPopulatedBidding)
+              req.body = biddings
+              next()
+            })
+            .catch(err => {
+              logger.error(err)
+              err = new Error('Internal error while retrieving the biddings list.')
+              err.status = 500
+              next(err)
+            })
+        })
       })
   },
 
@@ -318,14 +321,17 @@ async function filterDataByRole (bidding, role, email) {
         if (!user) {
           return {}
         }
-        bidding.users = bidding.users.filter((current) => {
-          return current.id.equals(user._id)
-        })
+        for (let i = 0; i < bidding.users.length; ++i) {
+          console.log(bidding.users[i].id, user._id)
+          if (bidding.users[i].id.equal(user._id)) return bidding
+        }
+        return {}
       })
   } else if (role === roles.platform.shadowUser) {
     return {}
+  } else {
+    return bidding // role === admin sends all info without modification
   }
-  return bidding // role === admin sends all info without modification
 }
 
 /**
@@ -344,6 +350,7 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
     permissions.uploadEconomical = boolDeadlines.onReception
     permissions.askQuestion = boolDeadlines.onQuestions
     permissions.seeAnswersQuestion = boolDeadlines.onQuestionsAnswers
+    permissions.seeResults = true
 
     /* create */
     const userBidding = {
