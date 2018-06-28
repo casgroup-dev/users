@@ -243,7 +243,6 @@ function getCleanAndPopulatedBidding (bidding) {
           role: current.role,
           email: user.email
         }
-        console.log(user.email)
       })
       .catch(err => {
         logger.error(err)
