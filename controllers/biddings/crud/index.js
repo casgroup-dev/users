@@ -321,11 +321,9 @@ async function filterDataByRole (bidding, role, email) {
         if (!user) {
           return {}
         }
-        for (let i = 0; i < bidding.users.length; ++i) {
-          console.log(bidding.users[i].id, user._id)
-          if (bidding.users[i].id.equal(user._id)) return bidding
-        }
-        return {}
+        bidding.users = bidding.users.filter((current) => {
+          return current.id.equals(user._id)
+        })
       })
   } else if (role === roles.platform.shadowUser) {
     return {}
