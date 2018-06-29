@@ -413,6 +413,7 @@ async function filterIdBiddingByRole (bidding, role, email, boolDeadlines) {
       bidderCompany: bidding.bidderCompany,
       users: bidding.users,
       questions: bidding.questions,
+      notices: bidding.notices,
       deadlines: bidding.deadlines,
       publishedResults: bidding.publishedResults,
       permissions: permissions
